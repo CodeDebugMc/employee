@@ -4,24 +4,13 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-
-
-
-
 const fileUpload = require('express-fileupload');
-
-
-
-
 const webtoken = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const bodyparser = require('body-parser');
 const xlsx = require('xlsx');
+
 const childrenRouter = require('./dashboardRoutes/Children');
-
-
-
-
 const EligibilityRoute = require('./dashboardRoutes/Eligibility');
 const VoluntaryWork = require('./dashboardRoutes/Voluntary');
 const CollegeRoute = require('./dashboardRoutes/College');
@@ -29,34 +18,20 @@ const VocationalRoute = require('./dashboardRoutes/Vocational');
 const PersonalRoute = require('./dashboardRoutes/PersonalInfo');
 const WorkExperienceRoute = require('./dashboardRoutes/WorkExperience');
 const OtherInfo = require('./dashboardRoutes/OtherSkills');
-const GraduateRoute = require('./dashboardRoutes/Graduate')
-
+const GraduateRoute = require('./dashboardRoutes/Graduate');
 const AllData = require('./dashboardRoutes/DataRoute');
 const Attendance = require('./dashboardRoutes/Attendance');
-
-
-
-
 const EmployeeSalaryGrade = require('./payrollRoutes/EmployeeSalaryGrade');
 const PlantillaTable = require('./payrollRoutes/PlantilliaTable');
 const SalaryGradeTable = require('./payrollRoutes/SalaryGradeTable');
 const Remittance = require('./payrollRoutes/Remittance');
 
-
-
-
 const app = express();
-
-
-
+const PORT = 5000;
 
 //MIDDLEWARE
 app.use(fileUpload());
 app.use(express.json());
-
-
-
-
 app.use(express.json());
 app.use(cors());
 app.use(bodyparser.json());
@@ -71,24 +46,12 @@ app.use('/vocational', VocationalRoute);
 app.use('/personalinfo', PersonalRoute);
 app.use('/WorkExperienceRoute', WorkExperienceRoute);
 app.use('/OtherInfo', OtherInfo);
-
-
 app.use('/allData', AllData);
 app.use('/attendance', Attendance);
-
-
 app.use('/EmployeeSalaryGrade', EmployeeSalaryGrade);
 app.use('/PlantillaTable', PlantillaTable);
 app.use('/SalaryGradeTable', SalaryGradeTable);
 app.use('/Remittance', Remittance);
-
-
-
-
-
-
-
-
 
 //MYSQL CONNECTION
 const db = mysql.createPool({
@@ -101,44 +64,25 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
-
-
-
 module.exports = db;
-
-
-
-
-
-
-
-
-
-
-
 
 // Test connection
 //db.getConnection((err, connection) => {
-  //if (err) {
-  //  console.error("Database connection failed:", err);
-    //return;
-  //}
-  //console.log("Database Connected");
-  //connection.release(); // Important: release connection back to the pool
+//if (err) {
+//  console.error("Database connection failed:", err);
+//return;
+//}
+//console.log("Database Connected");
+//connection.release(); // Important: release connection back to the pool
 //});
 
-
-
-
 // REGISTER
-app.post("/register", async (req, res) => {
+app.post('/register', async (req, res) => {
   const { username, password, employeeNumber } = req.body;
-
 
   try {
     // hash the password
     const hashedPass = await bcrypt.hash(password, 10);
-
 
     const query = `
       INSERT INTO users (
@@ -151,32 +95,25 @@ app.post("/register", async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-
-     db.query(query, [
+    db.query(query, [
       username,
-      'staff',       // default role
+      'staff', // default role
       hashedPass,
       employeeNumber,
-      1,             // default employmentCategory
-      'user'         // default access_level
+      1, // default employmentCategory
+      'user', // default access_level
     ]);
 
-
-    res.status(200).send({ message: "User Registered Successfully" });
+    res.status(200).send({ message: 'User Registered Successfully' });
   } catch (err) {
-    console.error("Error during registration:", err);
-    res.status(500).send({ error: "Failed to register user" });
+    console.error('Error during registration:', err);
+    res.status(500).send({ error: 'Failed to register user' });
   }
 });
-
-
-
-
 
 //LOGIN
 app.post('/login', (req, res) => {
   const { employeeNumber, password } = req.body;
-
 
   const query = `SELECT * FROM users WHERE employeeNumber = ?
    
@@ -188,20 +125,11 @@ app.post('/login', (req, res) => {
         .status(400)
         .send({ message: 'User not found or Employee Number does not match' });
 
-
-
-
     const user = result[0];
     const isMatch = await bcrypt.compare(password, user.password);
 
-
-
-
     if (!isMatch)
       return res.status(400).send({ message: 'Invalid Credentials' });
-
-
-
 
     const token = webtoken.sign(
       {
@@ -223,9 +151,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-
-
-
 //data
 app.get('/data', (req, res) => {
   const query = `SELECT * FROM learning_and_development_table`;
@@ -235,9 +160,6 @@ app.get('/data', (req, res) => {
   });
 });
 
-
-
-
 //Read
 app.get('/learning_and_development_table', (req, res) => {
   const query = 'SELECT * FROM learning_and_development_table';
@@ -246,9 +168,6 @@ app.get('/learning_and_development_table', (req, res) => {
     res.status(200).send(result);
   });
 });
-
-
-
 
 //Add
 app.post('/learning_and_development_table', (req, res) => {
@@ -280,9 +199,6 @@ app.post('/learning_and_development_table', (req, res) => {
     }
   );
 });
-
-
-
 
 //Update
 app.put('/learning_and_development_table/:id', (req, res) => {
@@ -317,9 +233,6 @@ app.put('/learning_and_development_table/:id', (req, res) => {
   );
 });
 
-
-
-
 //delete
 app.delete('/learning_and_development_table/:id', (req, res) => {
   const { id } = req.params;
@@ -329,9 +242,6 @@ app.delete('/learning_and_development_table/:id', (req, res) => {
     res.status(200).send({ message: 'Item deleted' });
   });
 });
-
-
-
 
 // File uploads
 const upload = multer({ dest: 'uploads/' });
@@ -343,9 +253,6 @@ function excelDateToUTCDate(excelDate) {
   );
 }
 
-
-
-
 app.post(
   '/upload_learning_and_development_table',
   upload.single('file'),
@@ -354,23 +261,14 @@ app.post(
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-
-
-
     try {
       // Read the uploaded XLS file
       const workbook = xlsx.readFile(req.file.path);
       const sheet_name = workbook.SheetNames[0];
       const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name]);
 
-
-
-
       // Log the uploaded data for troubleshooting
       console.log('Uploaded employee info data:', sheet);
-
-
-
 
       // Insert data into MySQL
       sheet.forEach((row) => {
@@ -382,9 +280,6 @@ app.post(
         const numberOfHours = row.numberOfHours;
         const typeOfLearningDevelopment = row.typeOfLearningDevelopment;
         const conductedSponsored = row.conductedSponsored;
-
-
-
 
         const query =
           'INSERT INTO learning_and_development_table (titleOfProgram, dateFrom, dateTo, numberOfHours, typeOfLearningDevelopment, conductedSponsored) VALUES (?, ?, ?, ?, ?, ?)';
@@ -408,9 +303,6 @@ app.post(
         );
       });
 
-
-
-
       // Send response after insertion
       res.json({
         message: 'Excel file uploaded and data inserted successfully',
@@ -431,9 +323,6 @@ app.post(
   }
 );
 
-
-
-
 // File upload config
 const storage = multer.diskStorage({
   destination: './uploads/', //BAgo
@@ -442,13 +331,7 @@ const storage = multer.diskStorage({
   },
 });
 
-
-
-
 const upload1 = multer({ storage });
-
-
-
 
 // Get settings
 app.get('/api/settings', (req, res) => {
@@ -458,15 +341,9 @@ app.get('/api/settings', (req, res) => {
   });
 });
 
-
-
-
 // Helper function to delete old logo
 const deleteOldLogo = (logoUrl) => {
   if (!logoUrl) return; // If no logo URL, exit early
-
-
-
 
   const logoPath = path.join(__dirname, logoUrl); // Construct the full path to the logo file
   fs.unlink(logoPath, (err) => {
@@ -478,9 +355,6 @@ const deleteOldLogo = (logoUrl) => {
   });
 };
 
-
-
-
 // Update settings
 app.post('/api/settings', upload1.single('logo'), (req, res) => {
   const companyName = req.body.company_name || '';
@@ -489,26 +363,14 @@ app.post('/api/settings', upload1.single('logo'), (req, res) => {
   const footerColor = req.body.footer_color || '#ffffff';
   const logoUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-
-
-
   // Check if settings already exist
   db.query('SELECT * FROM settings WHERE id = 1', (err, result) => {
     if (err) throw err;
 
-
-
-
     if (result.length > 0) {
       // Existing settings found
 
-
-
-
       const oldLogoUrl = result[0].logo_url; // Save old logo URL for deletion
-
-
-
 
       // Update existing settings
       const query =
@@ -518,22 +380,13 @@ app.post('/api/settings', upload1.single('logo'), (req, res) => {
       const params = [companyName, headerColor, footerText, footerColor];
       if (logoUrl) params.push(logoUrl);
 
-
-
-
       db.query(query, params, (err) => {
         if (err) throw err;
-
-
-
 
         // If there's a new logo, delete the old one
         if (logoUrl && oldLogoUrl) {
           deleteOldLogo(oldLogoUrl);
         }
-
-
-
 
         res.send({ success: true });
       });
@@ -553,35 +406,20 @@ app.post('/api/settings', upload1.single('logo'), (req, res) => {
   });
 });
 
-
-
-
 // Fetch official time records for a person_id (Monday to Sunday)
 app.get('/officialtimetable/:employeeID', (req, res) => {
   const { employeeID } = req.params;
   const sql = 'SELECT * FROM officialtime WHERE employeeID = ? ORDER BY id';
 
-
-
-
   db.query(sql, [employeeID], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-
-
-
 
     res.json(results);
   });
 });
 
-
-
-
 // app.post("/officialtimetable", (req, res) => {
 //   const { employeeID, records } = req.body;
-
-
-
 
 //   // Insert or update logic
 //   const sql = `
@@ -614,9 +452,6 @@ app.get('/officialtimetable/:employeeID', (req, res) => {
 //       WHERE employeeID = employeeID and day = day
 //   `;
 
-
-
-
 //   const values = records.map((r) => [
 //     employeeID,
 //     r.day,
@@ -633,30 +468,18 @@ app.get('/officialtimetable/:employeeID', (req, res) => {
 //     r.breaktime,
 //   ]);
 
-
-
-
 //   db.query(sql, [values], (err) => {
 //     if (err) return res.status(500).json({ error: err.message });
 //     res.json({ message: "Records saved successfully" });
 //   });
 // });
 
-
-
-
 app.post('/officialtimetable', (req, res) => {
   const { employeeID, records } = req.body;
-
-
-
 
   if (!records || records.length === 0) {
     return res.status(400).json({ message: 'No records to insert or update.' });
   }
-
-
-
 
   // Prepare values for bulk insert
   const values = records.map((r) => [
@@ -674,9 +497,6 @@ app.post('/officialtimetable', (req, res) => {
     r.officialOverTimeOUT,
     r.breaktime,
   ]);
-
-
-
 
   const sql = `
     INSERT INTO officialtime (
@@ -709,9 +529,6 @@ app.post('/officialtimetable', (req, res) => {
       breaktime = VALUES(breaktime)
   `;
 
-
-
-
   db.query(sql, [values], (err, result) => {
     if (err) {
       console.error('Error inserting or updating records:', err);
@@ -721,46 +538,35 @@ app.post('/officialtimetable', (req, res) => {
   });
 });
 
-
-
-
 // EXCEL UPLOAD FOR OFFICIAL TIME
 
-
-
-
-
-
-app.post("/upload-excel-faculty-official-time", async (req, res) => {
+app.post('/upload-excel-faculty-official-time', async (req, res) => {
   if (!req.files || !req.files.file) {
-    return res.status(400).json({ message: "No file uploaded." });
+    return res.status(400).json({ message: 'No file uploaded.' });
   }
-
 
   const file = req.files.file;
-  const workbook = xlsx.read(file.data, { type: "buffer" });
+  const workbook = xlsx.read(file.data, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
-  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
-
+  const sheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+    defval: null,
+  });
 
   if (!sheet.length) {
-    return res.status(400).json({ message: "Excel file is empty." });
+    return res.status(400).json({ message: 'Excel file is empty.' });
   }
-
 
   const cleanedSheet = sheet.map((row) => {
     const cleanedRow = {};
     for (const key in row) {
-      const cleanKey = key.replace(/\u00A0/g, "").trim();
+      const cleanKey = key.replace(/\u00A0/g, '').trim();
       cleanedRow[cleanKey] = row[key];
     }
     return cleanedRow;
   });
 
-
   let insertedCount = 0;
   let updatedCount = 0;
-
 
   for (const row of cleanedSheet) {
     const {
@@ -778,17 +584,13 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
       officialOverTimeOUT,
     } = row;
 
-
     if (!employeeID || !day) continue;
-
 
     const checkQuery = `SELECT id FROM officialtime WHERE employeeID = ? AND day = ?`;
     const checkValues = [employeeID, day];
 
-
     try {
       const [rows] = await db.promise().query(checkQuery, checkValues);
-
 
       if (rows.length > 0) {
         // Exists – perform UPDATE
@@ -807,7 +609,6 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
           WHERE employeeID = ? AND day = ?
         `;
 
-
         const updateValues = [
           officialTimeIN,
           officialBreaktimeIN,
@@ -822,7 +623,6 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
           employeeID,
           day,
         ];
-
 
         const [result] = await db.promise().query(updateQuery, updateValues);
         if (result.affectedRows > 0) updatedCount++;
@@ -844,7 +644,6 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-
         const insertValues = [
           employeeID,
           day,
@@ -860,31 +659,25 @@ app.post("/upload-excel-faculty-official-time", async (req, res) => {
           officialOverTimeOUT,
         ];
 
-
         const [result] = await db.promise().query(insertQuery, insertValues);
         if (result.affectedRows > 0) insertedCount++;
       }
     } catch (err) {
-      
-      console.error(`Error processing row for employeeID: ${employeeID}, day: ${day}`, err.message);
+      console.error(
+        `Error processing row for employeeID: ${employeeID}, day: ${day}`,
+        err.message
+      );
     }
   }
 
-
   res.json({
-    message: "Upload complete.",
+    message: 'Upload complete.',
     inserted: insertedCount,
     updated: updatedCount,
   });
 });
 
-
-
-
 //////// ROLES
-
-
-
 
 app.get('/api/user-role/:user', (req, res) => {
   const { user } = req.params;
@@ -903,9 +696,6 @@ app.get('/api/user-role/:user', (req, res) => {
   });
 });
 
-
-
-
 //////// REMITTANCE
 app.get('/employee-remittance', (req, res) => {
   const sql = 'SELECT * FROM employee_remittance_table';
@@ -917,9 +707,6 @@ app.get('/employee-remittance', (req, res) => {
     }
   });
 });
-
-
-
 
 // POST: Add new remittance data
 app.post('/employee-remittance', (req, res) => {
@@ -944,14 +731,8 @@ app.post('/employee-remittance', (req, res) => {
     feu,
   } = req.body;
 
-
-
-
   const sql = `INSERT INTO employee_remittance_table (employeeNumber, disallowance, gsisSalaryLoan, gsisPolicyLoan, gfal, cpl, mpl, mplLite, emergencyLoan, nbc594, increment, pagibig, pagibigFundCont, pagibig2, multiPurpLoan, landbankSalaryLoan, earistCreditCoop, feu)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-
-
 
   const values = [
     employeeNumber,
@@ -974,9 +755,6 @@ app.post('/employee-remittance', (req, res) => {
     feu,
   ];
 
-
-
-
   db.query(sql, values, (err, result) => {
     if (err) {
       console.error('Error during POST request:', err);
@@ -986,9 +764,6 @@ app.post('/employee-remittance', (req, res) => {
     }
   });
 });
-
-
-
 
 // PUT: Update remittance data by ID
 app.put('/employee-remittance/:id', (req, res) => {
@@ -1014,9 +789,6 @@ app.put('/employee-remittance/:id', (req, res) => {
     feu,
   } = req.body;
 
-
-
-
   const sql = `UPDATE employee_remittance_table SET 
   employeeNumber = ?, 
   disallowance = ?, 
@@ -1037,9 +809,6 @@ app.put('/employee-remittance/:id', (req, res) => {
   earistCreditCoop = ?, 
   feu = ?
                WHERE id = ?`;
-
-
-
 
   const values = [
     employeeNumber,
@@ -1063,9 +832,6 @@ app.put('/employee-remittance/:id', (req, res) => {
     id,
   ];
 
-
-
-
   db.query(sql, values, (err, result) => {
     if (err) {
       res.status(500).json({ message: 'Error updating data' });
@@ -1075,16 +841,10 @@ app.put('/employee-remittance/:id', (req, res) => {
   });
 });
 
-
-
-
 // DELETE: Delete remittance data by ID
 app.delete('/employee-remittance/:id', (req, res) => {
   const { id } = req.params;
   const sql = 'DELETE FROM employee_remittance_table WHERE id = ?';
-
-
-
 
   db.query(sql, [id], (err, result) => {
     if (err) {
@@ -1094,9 +854,6 @@ app.delete('/employee-remittance/:id', (req, res) => {
     }
   });
 });
-
-
-
 
 /////// ITEM-TABLE
 
@@ -1117,7 +874,15 @@ app.get('/api/item-table', (req, res) => {
 
 // Add new item (Do NOT include `dateCreated` — it auto-generates)
 app.post('/api/item-table', (req, res) => {
-  const { item_description, employeeID, name, item_code, salary_grade, step, effectivityDate } = req.body;
+  const {
+    item_description,
+    employeeID,
+    name,
+    item_code,
+    salary_grade,
+    step,
+    effectivityDate,
+  } = req.body;
 
   const sql = `
     INSERT INTO item_table (item_description, employeeID, name, item_code, salary_grade, step, effectivityDate)
@@ -1125,7 +890,15 @@ app.post('/api/item-table', (req, res) => {
   `;
   db.query(
     sql,
-    [item_description, employeeID, name, item_code, salary_grade, step, effectivityDate],
+    [
+      item_description,
+      employeeID,
+      name,
+      item_code,
+      salary_grade,
+      step,
+      effectivityDate,
+    ],
     (err, result) => {
       if (err) {
         console.error('Database Insert Error:', err.message);
@@ -1142,7 +915,15 @@ app.post('/api/item-table', (req, res) => {
 // Update item (Do NOT touch `dateCreated`)
 app.put('/api/item-table/:id', (req, res) => {
   const { id } = req.params;
-  const { item_description, employeeID, name, item_code, salary_grade, step, effectivityDate } = req.body;
+  const {
+    item_description,
+    employeeID,
+    name,
+    item_code,
+    salary_grade,
+    step,
+    effectivityDate,
+  } = req.body;
 
   const sql = `
     UPDATE item_table SET
@@ -1158,7 +939,16 @@ app.put('/api/item-table/:id', (req, res) => {
   `;
   db.query(
     sql,
-    [item_description, employeeID, name, item_code, salary_grade, step, effectivityDate, id],
+    [
+      item_description,
+      employeeID,
+      name,
+      item_code,
+      salary_grade,
+      step,
+      effectivityDate,
+      id,
+    ],
     (err, result) => {
       if (err) {
         console.error('Database Update Error:', err.message);
@@ -1187,10 +977,6 @@ app.delete('/api/item-table/:id', (req, res) => {
   });
 });
 
-
-
-
-
 // Get all records
 app.get('/api/salary-grade-status', (req, res) => {
   db.query('SELECT * FROM salary_grade_status', (err, result) => {
@@ -1199,23 +985,14 @@ app.get('/api/salary-grade-status', (req, res) => {
   });
 });
 
-
-
-
 // Add a new record
 app.post('/api/salary-grade-status', (req, res) => {
   const { effectivityDate, step_number, status } = req.body;
-
-
-
 
   const sql = `
     INSERT INTO salary_grade_status (effectivityDate, step_number, status)
     VALUES (?, ?, ?)
   `;
-
-
-
 
   db.query(sql, [effectivityDate, step_number, status], (err, result) => {
     if (err) res.status(500).send(err);
@@ -1224,16 +1001,10 @@ app.post('/api/salary-grade-status', (req, res) => {
   });
 });
 
-
-
-
 // Update a record
 app.put('/api/salary-grade-status/:id', (req, res) => {
   const { id } = req.params;
   const { effectivityDate, step_number, status } = req.body;
-
-
-
 
   const sql = `
     UPDATE salary_grade_status
@@ -1241,33 +1012,21 @@ app.put('/api/salary-grade-status/:id', (req, res) => {
     WHERE id = ?
   `;
 
-
-
-
   db.query(sql, [effectivityDate, step_number, status, id], (err) => {
     if (err) res.status(500).send(err);
     else res.json({ message: 'Record updated successfully' });
   });
 });
 
-
-
-
 // Delete a record
 app.delete('/api/salary-grade-status/:id', (req, res) => {
   const { id } = req.params;
-
-
-
 
   db.query('DELETE FROM salary_grade_status WHERE id = ?', [id], (err) => {
     if (err) res.status(500).send(err);
     else res.json({ message: 'Record deleted successfully' });
   });
 });
-
-
-
 
 // Get all department table
 app.get('/api/department-table', (req, res) => {
@@ -1276,9 +1035,6 @@ app.get('/api/department-table', (req, res) => {
     res.json(results);
   });
 });
-
-
-
 
 // Get a single department table by ID
 app.get('/api/department-table/:id', (req, res) => {
@@ -1295,17 +1051,11 @@ app.get('/api/department-table/:id', (req, res) => {
   );
 });
 
-
-
-
 // Add a new department table
 app.post('/api/department-table', (req, res) => {
   const { code, description } = req.body;
   if (!code || !description)
     return res.status(400).send('Code and description are required');
-
-
-
 
   const sql = `INSERT INTO department_table (code, description) VALUES (?, ?)`;
   db.query(sql, [code, description], (err, result) => {
@@ -1314,16 +1064,10 @@ app.post('/api/department-table', (req, res) => {
   });
 });
 
-
-
-
 // Update a department table
 app.put('/api/department-table/:id', (req, res) => {
   const { id } = req.params;
   const { code, description } = req.body;
-
-
-
 
   const sql = `UPDATE department_table SET code = ?, description = ? WHERE id = ?`;
   db.query(sql, [code, description, id], (err, result) => {
@@ -1331,9 +1075,6 @@ app.put('/api/department-table/:id', (req, res) => {
     res.send('Department updated successfully');
   });
 });
-
-
-
 
 // Delete a department table
 app.delete('/api/department-table/:id', (req, res) => {
@@ -1344,9 +1085,6 @@ app.delete('/api/department-table/:id', (req, res) => {
   });
 });
 
-
-
-
 /////////////////////////////////////////////////////////////////////////////
 // Get all department assignments
 app.get('/api/department-assignment', (req, res) => {
@@ -1355,9 +1093,6 @@ app.get('/api/department-assignment', (req, res) => {
     res.json(results);
   });
 });
-
-
-
 
 // Get a single department assignment by ID
 app.get('/api/department-assignment/:id', (req, res) => {
@@ -1374,17 +1109,11 @@ app.get('/api/department-assignment/:id', (req, res) => {
   );
 });
 
-
-
-
 // Add a new department assignment (now using department code)
 app.post('/api/department-assignment', (req, res) => {
   const { code, name, employeeNumber } = req.body;
   if (!code || !employeeNumber)
     return res.status(400).send('Code and Employee Number are required');
-
-
-
 
   const sql = `INSERT INTO department_assignment (code, name, employeeNumber) VALUES (?, ?, ?)`;
   db.query(sql, [code, name, employeeNumber], (err, result) => {
@@ -1393,16 +1122,10 @@ app.post('/api/department-assignment', (req, res) => {
   });
 });
 
-
-
-
 // Update a department assignment (by ID)
 app.put('/api/department-assignment/:id', (req, res) => {
   const { id } = req.params;
   const { code, name, employeeNumber } = req.body;
-
-
-
 
   const sql = `UPDATE department_assignment SET code = ?, name = ?, employeeNumber = ? WHERE id = ?`;
   db.query(sql, [code, name, employeeNumber, id], (err, result) => {
@@ -1410,9 +1133,6 @@ app.put('/api/department-assignment/:id', (req, res) => {
     res.send('Department assignment updated successfully');
   });
 });
-
-
-
 
 // Delete a department assignment
 app.delete('/api/department-assignment/:id', (req, res) => {
@@ -1427,19 +1147,10 @@ app.delete('/api/department-assignment/:id', (req, res) => {
   );
 });
 
-
-
-
 // LEAVE
-
-
-
 
 app.get('/leave', (req, res) => {
   const sql = `SELECT * FROM leave_table`;
-
-
-
 
   db.query(sql, (err, result) => {
     if (err) {
@@ -1450,21 +1161,12 @@ app.get('/leave', (req, res) => {
   });
 });
 
-
-
-
 app.post('/leave', (req, res) => {
   const { leave_code, description, number_hours, status } = req.body;
-
-
-
 
   if (!leave_code) {
     return res.status(400).json({ error: 'Leave code is required' });
   }
-
-
-
 
   const sql = `INSERT INTO leave_table (leave_code, description, number_hours, status) VALUES (?,?,?,?)`;
   db.query(
@@ -1476,9 +1178,6 @@ app.post('/leave', (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
       }
 
-
-
-
       res.status(201).json({
         message: 'Leave record added successfully',
         id: result.insertId,
@@ -1487,29 +1186,17 @@ app.post('/leave', (req, res) => {
   );
 });
 
-
-
-
 app.put('/leave/:id', (req, res) => {
   const { id } = req.params;
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
 
-
-
-
   const { leave_code, description, number_hours, status } = req.body;
-
-
-
 
   if (!leave_code) {
     return res.status(400).json({ error: 'Leave code is required' });
   }
-
-
-
 
   const sql = `UPDATE leave_table SET leave_code = ?, description = ?, number_hours = ?, status = ? WHERE id = ?`;
   db.query(
@@ -1521,36 +1208,21 @@ app.put('/leave/:id', (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
       }
 
-
-
-
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Leave record not found' });
       }
-
-
-
 
       res.json({ message: 'Leave record updated successfully' });
     }
   );
 });
 
-
-
-
 app.delete('/leave/:id', (req, res) => {
   const { id } = req.params;
-
-
-
 
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
-
-
-
 
   const sql = `DELETE FROM leave_table WHERE id = ?`;
   db.query(sql, [id], (err, result) => {
@@ -1559,22 +1231,13 @@ app.delete('/leave/:id', (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-
-
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Leave record not found' });
     }
 
-
-
-
     res.json({ message: 'Leave record deleted successfully' });
   });
 });
-
-
-
 
 //LEAVE ASSIGNMENT START
 // CREATE Leave Assignment
@@ -1590,9 +1253,6 @@ app.post('/leave_assignment', (req, res) => {
   });
 });
 
-
-
-
 // READ Leave Assignments
 app.get('/leave_assignment', (req, res) => {
   const sql = 'SELECT * FROM leave_assignment';
@@ -1601,9 +1261,6 @@ app.get('/leave_assignment', (req, res) => {
     res.json(result);
   });
 });
-
-
-
 
 // UPDATE Leave Assignment
 app.put('/leave_assignment/:id', (req, res) => {
@@ -1617,9 +1274,6 @@ app.put('/leave_assignment/:id', (req, res) => {
   });
 });
 
-
-
-
 // DELETE Leave Assignment
 app.delete('/leave_assignment/:id', (req, res) => {
   const { id } = req.params;
@@ -1630,19 +1284,10 @@ app.delete('/leave_assignment/:id', (req, res) => {
   });
 });
 
-
-
-
 // HOLIDAY
-
-
-
 
 app.get('/holiday-suspension', (req, res) => {
   const sql = `SELECT * FROM holidayandsuspension`;
-
-
-
 
   db.query(sql, (err, result) => {
     if (err) {
@@ -1653,21 +1298,12 @@ app.get('/holiday-suspension', (req, res) => {
   });
 });
 
-
-
-
 app.post('/holiday-suspension', (req, res) => {
   const { description, date, status } = req.body;
-
-
-
 
   if (!description) {
     return res.status(400).json({ error: 'Description is required' });
   }
-
-
-
 
   const sql = `INSERT INTO holidayandsuspension (description, date, status) VALUES (?, ?, ?)`;
   db.query(sql, [description, date, status], (err, result) => {
@@ -1676,9 +1312,6 @@ app.post('/holiday-suspension', (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-
-
-
     res.status(201).json({
       message: 'Holiday and Suspension record added successfully',
       id: result.insertId,
@@ -1686,25 +1319,16 @@ app.post('/holiday-suspension', (req, res) => {
   });
 });
 
-
-
-
 app.put('/holiday-suspension/:id', (req, res) => {
   const { id } = req.params;
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
 
-
-
-
   const { description, date, status } = req.body;
   if (!description) {
     return res.status(400).json({ error: 'Description is required' });
   }
-
-
-
 
   const sql = `UPDATE holidayandsuspension SET description = ?, date = ?, status = ? WHERE id = ?`;
   db.query(sql, [description, date, status, id], (err, result) => {
@@ -1713,37 +1337,22 @@ app.put('/holiday-suspension/:id', (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-
-
-
     if (result.affectedRows === 0) {
       return res
         .status(404)
         .json({ error: 'Holiday suspension record not found' });
     }
 
-
-
-
     res.json({ message: 'Holiday suspension record updated successfully' });
   });
 });
 
-
-
-
 app.delete('/holiday-suspension/:id', (req, res) => {
   const { id } = req.params;
-
-
-
 
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID format' });
   }
-
-
-
 
   const sql = `DELETE FROM holidayandsuspension WHERE id = ?`;
   db.query(sql, [id], (err, result) => {
@@ -1752,61 +1361,55 @@ app.delete('/holiday-suspension/:id', (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-
-
-
     if (result.affectedRows === 0) {
       return res
         .status(404)
         .json({ error: 'Holiday suspension record not found' });
     }
 
-
-
-
     res.json({ message: 'Holiday suspension record deleted successfully' });
   });
 });
-
-
-
 
 app.get('/personalinfo/person_table/:employeeNumber', (req, res) => {
   const { employeeNumber } = req.params;
   const query = 'SELECT * FROM person_table WHERE agencyEmployeeNum = ?';
 
-
-
-
   db.query(query, [employeeNumber], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).send('Internal Server Error');
     }
 
-
-
-
     if (result.length === 0) {
       return res.status(404).send('Employee not found');
     }
 
-
-
-
     res.status(200).send(result[0]); // Send first matched result
   });
 });
-
-
-
 
 app.get('/college/college-table/:employeeNumber', (req, res) => {
   const { employeeNumber } = req.params;
   const query = 'SELECT * FROM college_table WHERE person_id = ?';
 
+  db.query(query, [employeeNumber], (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).send('Internal Server Error');
+    }
 
+    if (result.length === 0) {
+      return res.status(404).send('Employee not found');
+    }
 
+    res.status(200).send(result[0]); // Send first matched result
+  });
+});
+
+app.get(`/GraduateRoute/graduate-table/:employeeNumber`, (req, res) => {
+  const { employeeNumber } = req.params;
+  const query = `SELECT * FROM graduate_table WHERE person_id = ?`;
 
   db.query(query, [employeeNumber], (err, result) => {
     if (err) {
@@ -1814,120 +1417,53 @@ app.get('/college/college-table/:employeeNumber', (req, res) => {
       return res.status(500).send('Internal Server Error');
     }
 
-
-
-
-    if (result.length === 0) {
-      return res.status(404).send('Employee not found');
-    }
-
-
-
-
-    res.status(200).send(result[0]); // Send first matched result
+    // Always respond with 200. If nothing found, send null
+    res.status(200).send(result.length > 0 ? result[0] : null);
   });
 });
-
-
-  app.get(`/GraduateRoute/graduate-table/:employeeNumber`, (req, res) => {
-    const { employeeNumber } = req.params;
-    const query = `SELECT * FROM graduate_table WHERE person_id = ?`;
-
-
-
-
-
-
-
-
-    db.query(query, [employeeNumber], (err, result) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).send('Internal Server Error');
-      }
-
-
-
-
-      // Always respond with 200. If nothing found, send null
-      res.status(200).send(result.length > 0 ? result[0] : null);
-    });
-  });
-
-
-
 
 app.get('/vocational/vocational-table/:employeeNumber', (req, res) => {
   const { employeeNumber } = req.params;
   const query = 'SELECT * FROM vocational_table WHERE person_id = ?';
 
-
-
-
   db.query(query, [employeeNumber], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).send('Internal Server Error');
     }
 
-
-
-
     if (result.length === 0) {
       return res.status(404).send('Employee not found');
     }
 
-
-
-
     res.status(200).send(result[0]); // Send first matched result
   });
 });
-
-
-
-
-
 
 for (let i = 1; i <= 12; i++) {
   app.get(`/childrenRoute/children-table${i}/:employeeNumber`, (req, res) => {
     const { employeeNumber } = req.params;
     const query = `SELECT * FROM children_table WHERE person_id = ? AND incValue=${i}`;
 
-
-
-
     db.query(query, [employeeNumber], (err, result) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).send('Internal Server Error');
       }
 
-
-
-
       if (result.length === 0) {
         return res.status(404).send('Employee not found');
       }
-
-
-
 
       res.status(200).send(result[0]); // Send first matched result
     });
   });
 }
 
-
-
-
 for (let i = 1; i <= 7; i++) {
   app.get(`/eligibilityRoute/eligibility${i}/:employeeNumber`, (req, res) => {
     const { employeeNumber } = req.params;
     const query = `SELECT * FROM eligibility_table WHERE person_id = ? AND incValue = ?`;
-
-
-
 
     db.query(query, [employeeNumber, i], (err, result) => {
       if (err) {
@@ -1935,17 +1471,11 @@ for (let i = 1; i <= 7; i++) {
         return res.status(500).send('Internal Server Error');
       }
 
-
-
-
       // Always respond with 200. If nothing found, send null
       res.status(200).send(result.length > 0 ? result[0] : null);
     });
   });
 }
-
-
-
 
 for (let i = 1; i <= 26; i++) {
   app.get(
@@ -1954,17 +1484,11 @@ for (let i = 1; i <= 26; i++) {
       const { employeeNumber } = req.params;
       const query = `SELECT * FROM work_experience_table WHERE person_id = ? AND incValue = ?`;
 
-
-
-
       db.query(query, [employeeNumber, i], (err, result) => {
         if (err) {
           console.error('Database error:', err);
           return res.status(500).send('Internal Server Error');
         }
-
-
-
 
         // Always respond with 200. If nothing found, send null
         res.status(200).send(result.length > 0 ? result[0] : null);
@@ -1973,16 +1497,10 @@ for (let i = 1; i <= 26; i++) {
   );
 }
 
-
-
-
 for (let i = 1; i <= 7; i++) {
   app.get(`/VoluntaryRoute/voluntary-work${i}/:employeeNumber`, (req, res) => {
     const { employeeNumber } = req.params;
     const query = `SELECT * FROM voluntary_work_table WHERE person_id = ? AND incValue = ?`;
-
-
-
 
     db.query(query, [employeeNumber, i], (err, result) => {
       if (err) {
@@ -1990,32 +1508,22 @@ for (let i = 1; i <= 7; i++) {
         return res.status(500).send('Internal Server Error');
       }
 
-
-
-
       // Always respond with 200. If nothing found, send null
       res.status(200).send(result.length > 0 ? result[0] : null);
     });
   });
 }
-
 
 for (let i = 1; i <= 21; i++) {
   app.get(`/learning_and_development_table${i}/:employeeNumber`, (req, res) => {
     const { employeeNumber } = req.params;
     const query = `SELECT * FROM learning_and_development_table WHERE person_id = ? AND incValue = ?`;
 
-
-
-
     db.query(query, [employeeNumber, i], (err, result) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).send('Internal Server Error');
       }
-
-
-
 
       // Always respond with 200. If nothing found, send null
       res.status(200).send(result.length > 0 ? result[0] : null);
@@ -2023,13 +1531,14 @@ for (let i = 1; i <= 21; i++) {
   });
 }
 
-
 for (let i = 1; i <= 7; i++) {
   app.get(`/OtherInfo/other-information${i}/:employeeNumber`, (req, res) => {
     const { employeeNumber } = req.params;
-    const query = `SELECT * FROM other_information_table WHERE person_id = ? AND incValue = ?` ;
+    const query = `SELECT * FROM other_information_table WHERE person_id = ? AND incValue = ?`;
 
-    console.log(`Request received for incValue ${i} and employeeNumber ${employeeNumber}`);
+    console.log(
+      `Request received for incValue ${i} and employeeNumber ${employeeNumber}`
+    );
 
     db.query(query, [employeeNumber, i], (err, result) => {
       if (err) {
@@ -2042,12 +1551,6 @@ for (let i = 1; i <= 7; i++) {
   });
 }
 
-
-
-
-
-
-
 // Get all payroll
 app.get('/api/payroll', (req, res) => {
   db.query('SELECT * FROM payroll_processing', (err, result) => {
@@ -2058,13 +1561,6 @@ app.get('/api/payroll', (req, res) => {
     }
   });
 });
-
-
-
-
-
-
-
 
 app.get('/api/payroll-with-remittance', (req, res) => {
   const query = `
@@ -2193,13 +1689,6 @@ app.get('/api/payroll-with-remittance', (req, res) => {
 
 `;
 
-
-
-
-
-
-
-
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching joined payroll data:', err);
@@ -2208,13 +1697,6 @@ app.get('/api/payroll-with-remittance', (req, res) => {
     res.json(results);
   });
 });
-
-
-
-
-
-
-
 
 app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   const { employeeNumber } = req.params;
@@ -2262,44 +1744,26 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     earistCreditCoop,
     feu,
     PhilHealthContribution,
-    department
+    department,
   } = req.body;
 
-
-
-
   const nameExtensionCandidates = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
-
-
-
 
   let lastName = '';
   let firstName = '';
   let middleName = '';
   let nameExtension = '';
 
-
-
-
   if (typeof name === 'string') {
-    const [last, firstMiddle] = name.split(',').map(part => part.trim());
-
-
-
+    const [last, firstMiddle] = name.split(',').map((part) => part.trim());
 
     if (last && firstMiddle) {
       lastName = last;
-
-
-
 
       const nameParts = firstMiddle.split(' ').filter(Boolean);
       if (nameParts.length > 0) {
         firstName = nameParts[0];
         const middleParts = [];
-
-
-
 
         for (let i = 1; i < nameParts.length; i++) {
           if (nameExtensionCandidates.includes(nameParts[i])) {
@@ -2309,18 +1773,12 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
           }
         }
 
-
-
-
         middleName = middleParts.join(' ');
       }
     }
   } else {
     console.error('Invalid name input:', name);
   }
-
-
-
 
   const query = `
     UPDATE payroll_processing p
@@ -2379,9 +1837,6 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     WHERE p.employeeNumber = ?
   `;
 
-
-
-
   const values = [
     department,
     startDate,
@@ -2426,11 +1881,8 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
     landbankSalaryLoan,
     earistCreditCoop,
     feu,
-    employeeNumber
+    employeeNumber,
   ];
-
-
-
 
   db.query(query, values, (err, result) => {
     if (err) {
@@ -2438,15 +1890,9 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-
-
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-
-
-
 
     // Update person_table
     const personQuery = `
@@ -2454,9 +1900,6 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
       SET firstName = ?, middleName = ?, lastName = ?, nameExtension = ?
       WHERE agencyEmployeeNum = ?
     `;
-
-
-
 
     db.query(
       personQuery,
@@ -2467,18 +1910,12 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
           return res.status(500).json({ error: 'Internal server error' });
         }
 
-
-
-
         // Update PhilHealth contribution
         const philHealthQuery = `
           UPDATE philhealth
           SET PhilHealthContribution = ?
           WHERE employeeNumber = ?
         `;
-
-
-
 
         db.query(
           philHealthQuery,
@@ -2489,9 +1926,6 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
               return res.status(500).json({ error: 'Internal server error' });
             }
 
-
-
-
             // Update department_assignment table
             const departmentAssignmentQuery = `
               UPDATE department_assignment
@@ -2499,20 +1933,16 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
               WHERE employeeNumber = ?
             `;
 
-
-
-
             db.query(
               departmentAssignmentQuery,
               [department, employeeNumber],
               (err4) => {
                 if (err4) {
                   console.error('Error updating department assignment:', err4);
-                  return res.status(500).json({ error: 'Internal server error' });
+                  return res
+                    .status(500)
+                    .json({ error: 'Internal server error' });
                 }
-
-
-
 
                 res.json({ message: 'Payroll record updated successfully' });
               }
@@ -2524,38 +1954,13 @@ app.put('/api/payroll-with-remittance/:employeeNumber', (req, res) => {
   });
 });
 
-
-
-
-
-
-
-
-
-
-
-
 app.delete('/api/payroll-with-remittance/:id', (req, res) => {
   const { id } = req.params;
-
-
-
-
-
-
-
 
   const query = `
     DELETE FROM payroll_processing
     WHERE id = ?
   `;
-
-
-
-
-
-
-
 
   db.query(query, [id], (err, result) => {
     if (err) {
@@ -2563,44 +1968,16 @@ app.delete('/api/payroll-with-remittance/:id', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-
-
-
-
-
-
-
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Payroll record not found' });
     }
-
-
-
-
-
-
-
 
     res.json({ message: 'Payroll record deleted successfully' });
   });
 });
 
-
-
-
-
-
-
-
 app.get('/api/payroll-with-remittance', (req, res) => {
   const { employeeNumber, startDate, endDate } = req.query;
-
-
-
-
-
-
-
 
   if (!employeeNumber || !startDate || !endDate) {
     return res
@@ -2608,24 +1985,10 @@ app.get('/api/payroll-with-remittance', (req, res) => {
       .json({ error: 'employeeNumber, startDate, and endDate are required' });
   }
 
-
-
-
-
-
-
-
   const query = `
     SELECT * FROM payroll_processing
     WHERE employeeNumber = ? AND startDate = ? AND endDate = ?
   `;
-
-
-
-
-
-
-
 
   db.query(query, [employeeNumber, startDate, endDate], (err, result) => {
     if (err) {
@@ -2633,56 +1996,21 @@ app.get('/api/payroll-with-remittance', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-
-
-
-
-
-
-
     if (result.length > 0) {
       // Found existing record
       return res.json({ exists: true });
     }
 
-
-
-
-
-
-
-
     res.json({ exists: false });
   });
 });
 
-
-
-
-
-
-
-
 app.post('/api/add-rendered-time', async (req, res) => {
   const attendanceData = req.body;
-
-
-
-
-
-
-
 
   if (!Array.isArray(attendanceData)) {
     return res.status(400).json({ error: 'Expected an array of data.' });
   }
-
-
-
-
-
-
-
 
   try {
     for (const record of attendanceData) {
@@ -2693,35 +2021,14 @@ app.post('/api/add-rendered-time', async (req, res) => {
         overallRenderedOfficialTimeTardiness,
       } = record;
 
-
-
-
-
-
-
-
       // Fetch the department code based on the employee number from department_assignment
       const departmentQuery = `
         SELECT code FROM department_assignment WHERE employeeNumber = ?
       `;
 
-
-
-
-
-
-
-
       const [departmentRows] = await db
         .promise()
         .query(departmentQuery, [employeeNumber]);
-
-
-
-
-
-
-
 
       // Check if a department is found for the employee
       if (departmentRows.length === 0) {
@@ -2730,33 +2037,12 @@ app.post('/api/add-rendered-time', async (req, res) => {
         });
       }
 
-
-
-
-
-
-
-
       const departmentCode = departmentRows[0].code;
-
-
-
-
-
-
-
 
       // Parse HH:MM:SS into h, m, s
       let h = '00';
       let m = '00';
       let s = '00';
-
-
-
-
-
-
-
 
       if (overallRenderedOfficialTimeTardiness) {
         const parts = overallRenderedOfficialTimeTardiness.split(':');
@@ -2767,25 +2053,11 @@ app.post('/api/add-rendered-time', async (req, res) => {
         }
       }
 
-
-
-
-
-
-
-
       // Insert the record into payroll including the department (code)
       const insertQuery = `
         INSERT INTO payroll_processing (employeeNumber, startDate, endDate, h, m, s, department)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
-
-
-
-
-
-
-
 
       await db
         .promise()
@@ -2800,13 +2072,6 @@ app.post('/api/add-rendered-time', async (req, res) => {
         ]);
     }
 
-
-
-
-
-
-
-
     res
       .status(200)
       .json({ message: 'Records added to payroll with time data.' });
@@ -2816,21 +2081,12 @@ app.post('/api/add-rendered-time', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
 app.post('/api/finalized-payroll', (req, res) => {
   const payrollData = req.body;
-
 
   if (!Array.isArray(payrollData) || payrollData.length === 0) {
     return res.status(400).json({ error: 'No payroll data received.' });
   }
-
 
   const values = payrollData.map((entry) => [
     entry.employeeNumber,
@@ -2877,9 +2133,8 @@ app.post('/api/finalized-payroll', (req, res) => {
     entry.earistCreditCoop,
     entry.feu,
     entry.PhilHealthContribution,
-    entry.department
+    entry.department,
   ]);
-
 
   const insertQuery = `
     INSERT INTO finalize_payroll (
@@ -2893,17 +2148,14 @@ app.post('/api/finalized-payroll', (req, res) => {
     ) VALUES ?
   `;
 
-
   db.query(insertQuery, [values], (err, result) => {
     if (err) {
       console.error('Error inserting finalized payroll:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-
     // Extract names to update status
-    const employeeNames = payrollData.map(entry => entry.name);
-
+    const employeeNames = payrollData.map((entry) => entry.name);
 
     const updateQuery = `
       UPDATE payroll_processing
@@ -2911,39 +2163,28 @@ app.post('/api/finalized-payroll', (req, res) => {
       WHERE name IN (?)
     `;
 
-
     db.query(updateQuery, [employeeNames], (updateErr, updateResult) => {
       if (updateErr) {
-        console.error('Error updating status in payroll_processing:', updateErr);
-        return res.status(500).json({ error: 'Payroll inserted, but failed to update status.' });
+        console.error(
+          'Error updating status in payroll_processing:',
+          updateErr
+        );
+        return res
+          .status(500)
+          .json({ error: 'Payroll inserted, but failed to update status.' });
       }
-
 
       res.json({
         message: 'Finalized payroll inserted and status updated successfully.',
         inserted: result.affectedRows,
-        updated: updateResult.affectedRows
+        updated: updateResult.affectedRows,
       });
     });
   });
 });
 
-
-
-
-
-
-
-
 app.get('/api/finalized-payroll', (req, res) => {
   const query = 'SELECT * FROM finalize_payroll ORDER BY dateCreated DESC';
-
-
-
-
-
-
-
 
   db.query(query, (err, results) => {
     if (err) {
@@ -2954,13 +2195,9 @@ app.get('/api/finalized-payroll', (req, res) => {
   });
 });
 
-
-
-
 app.delete('/api/finalized-payroll/:id', (req, res) => {
   const { id } = req.params;
   const { employeeNumber, name } = req.body;
-
 
   const deleteQuery = 'DELETE FROM finalize_payroll WHERE id = ?';
   const updateQuery = `
@@ -2968,7 +2205,6 @@ app.delete('/api/finalized-payroll/:id', (req, res) => {
     SET status = 0
     WHERE name = ?
   `;
-
 
   // First delete
   db.query(deleteQuery, [id], (err, results) => {
@@ -2979,33 +2215,25 @@ app.delete('/api/finalized-payroll/:id', (req, res) => {
       return res.status(404).json({ message: 'Payroll record not found' });
     }
 
-
     // Then update status
     db.query(updateQuery, [name], (updateErr, updateResult) => {
       if (updateErr) {
-        return res.status(500).json({ error: 'Deleted but failed to update status.' });
+        return res
+          .status(500)
+          .json({ error: 'Deleted but failed to update status.' });
       }
-
 
       res.json({
         message: 'Deleted and status updated.',
         deleted: results.affectedRows,
-        updated: updateResult.affectedRows
+        updated: updateResult.affectedRows,
       });
     });
   });
 });
 
-
-
-
-
-
 app.post('/api/philhealth', (req, res) => {
   const { employeeNumber, PhilHealthContribution } = req.body;
-
-
-
 
   const query =
     'INSERT INTO philhealth (employeeNumber, PhilHealthContribution) VALUES (?, ?)';
@@ -3019,9 +2247,6 @@ app.post('/api/philhealth', (req, res) => {
   });
 });
 
-
-
-
 app.get('/api/philhealth', (req, res) => {
   db.query('SELECT * FROM philhealth', (err, results) => {
     if (err) {
@@ -3031,15 +2256,9 @@ app.get('/api/philhealth', (req, res) => {
   });
 });
 
-
-
-
 app.put('/api/philhealth/:id', (req, res) => {
   const { id } = req.params;
   const { employeeNumber, PhilHealthContribution } = req.body;
-
-
-
 
   const query =
     'UPDATE philhealth SET employeeNumber = ?, PhilHealthContribution = ? WHERE id = ?';
@@ -3058,16 +2277,8 @@ app.put('/api/philhealth/:id', (req, res) => {
   );
 });
 
-
-
-
-
-
 app.delete('/api/philhealth/:id', (req, res) => {
   const { id } = req.params;
-
-
-
 
   const query = 'DELETE FROM philhealth WHERE id = ?';
   db.query(query, [id], (err, results) => {
@@ -3081,26 +2292,24 @@ app.delete('/api/philhealth/:id', (req, res) => {
   });
 });
 
-
-
-
 // BULK REGISTER
-app.post("/excel-register", (req, res) => {
+app.post('/excel-register', (req, res) => {
   const { users } = req.body;
 
   if (!Array.isArray(users) || users.length === 0) {
-    return res.status(400).json({ message: "No users data provided" });
+    return res.status(400).json({ message: 'No users data provided' });
   }
 
   const results = [];
   const errors = [];
 
   users.forEach((user) => {
-    const queryCheck =
-      "SELECT * FROM users WHERE employeeNumber = ?";
+    const queryCheck = 'SELECT * FROM users WHERE employeeNumber = ?';
     db.query(queryCheck, [user.employeeNumber], (err, existingUser) => {
       if (err) {
-        errors.push(`Error checking user ${user.employeeNumber}: ${err.message}`);
+        errors.push(
+          `Error checking user ${user.employeeNumber}: ${err.message}`
+        );
         return;
       }
 
@@ -3109,8 +2318,8 @@ app.post("/excel-register", (req, res) => {
       } else {
         const hashedPassword = bcrypt.hashSync(user.password, 10);
         const queryInsert =
-          "INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
+          'INSERT INTO users (username, email, role, password, employeeNumber, employmentCategory, access_level) VALUES (?, ?, ?, ?, ?, ?, ?)';
+
         db.query(
           queryInsert,
           [
@@ -3124,12 +2333,14 @@ app.post("/excel-register", (req, res) => {
           ],
           (err, result) => {
             if (err) {
-              errors.push(`Error processing user ${user.employeeNumber}: ${err.message}`);
+              errors.push(
+                `Error processing user ${user.employeeNumber}: ${err.message}`
+              );
             } else {
               results.push({
                 employeeNumber: user.employeeNumber,
                 username: user.username,
-                status: "success",
+                status: 'success',
               });
             }
           }
@@ -3141,16 +2352,267 @@ app.post("/excel-register", (req, res) => {
   // Delay sending response to allow for asynchronous processing
   setTimeout(() => {
     res.json({
-      message: "Bulk registration completed",
+      message: 'Bulk registration completed',
       successful: results,
       errors: errors,
     });
   }, 1000); // Adjust delay if necessary for your use case
 });
 
+//===========================
+// LEAVE MANAGEMENT START HERE
+//============================
 
+// Leave request form
+// Get leave types
+app.get('/api/leave-types', (req, res) => {
+  db.query(
+    'SELECT leave_code, description FROM leave_table',
+    (err, results) => {
+      if (err)
+        return res.status(500).json({ message: 'Error fetching leave types' });
+      res.json(results);
+    }
+  );
+});
 
+// Apply for employee leave API
+app.post('/api/leaves', (req, res) => {
+  const { employee_number, leave_type, date } = req.body;
 
-app.listen(5000, () => {
-  console.log('Server runnning');
+  const query = `INSERT INTO leaves (employee_number, leave_type, date, status) VALUES (?,?,?,'pending')`;
+
+  db.query(query, [employee_number, leave_type, date], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Error Submitting leave' });
+    res.json({ message: 'Leave submitted', leave_id: result.insertId });
+  });
+});
+
+// Leave History List
+// app.get('/api/leaves/history/:employeeNumber', (req, res) => {
+//   const { employeeNumber } = req.params;
+
+//   const query = `
+//   SELECT l.id, l.leave_type, lt.description, l.date, l.status, l.created_at
+//     FROM leaves l
+//     JOIN leave_table lt ON l.leave_type = lt.leave_code
+//     WHERE l.employeeNumber = ?
+//     ORDER BY l.date DESC
+//     `;
+
+//   db.query(query, [employeeNumber], (err, result) => {
+//     if (err) res.status(500).json({ message: 'Error fetching leave history' });
+//     res.json(result);
+//   });
+// });
+
+// Get all leave history list
+app.get('/api/leaves', (req, res) => {
+  const query = `
+    SELECT 
+      l.id,
+      u.employeeNumber,
+      u.username,
+      l.leave_type,
+      lt.description AS leave_description,
+      l.date,
+      l.status,
+      l.created_at
+    FROM leaves l
+    JOIN users u ON l.employee_number = u.employeeNumber
+    JOIN leave_table lt ON l.leave_type = lt.leave_code
+    ORDER BY l.date DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('MySQL error:', err);
+      return res
+        .status(500)
+        .json({ message: 'Error fetching leave requests', error: err });
+    }
+
+    res.json(results);
+  });
+});
+
+// Get the leave request by employee
+app.get('/api/leaves/history/:employeeNumber', (req, res) => {
+  const { employeeNumber } = req.params;
+  const query = `
+    SELECT l.id, l.leave_type, lt.description, l.date, l.status, l.created_at
+    FROM leaves l
+    JOIN leave_table lt ON l.leave_type = lt.leave_code
+    WHERE l.employee_number = ?
+    ORDER BY l.date DESC
+  `;
+
+  db.query(query, [employeeNumber], (err, results) => {
+    if (err)
+      return res.status(500).json({ message: 'Error fetching leave history' });
+    res.json(results);
+  });
+});
+
+// Update the leave request by employee
+app.put('/api/leaves/:id', async (req, res) => {
+  const { id } = req.params;
+  const { leave_type, date } = req.body;
+
+  try {
+    const result = db.query(
+      'UPDATE leaves SET leave_type = ?, date = ? WHERE id = ? AND status = "pending"',
+      [leave_type, date, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Leave request not found' });
+    }
+    res.json({ message: 'Leave request updated' });
+  } catch (e) {
+    console.error('Database update error', e);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Delete the leave request by employee
+app.delete('/api/leaves/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = db.query(
+      'DELETE FROM leaves WHERE id = ? AND status = "pending"',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Leave request not found' });
+    }
+    res.json({ message: 'Leave deleted successfully' });
+  } catch (e) {
+    console.error('Database delete error', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get all pending leaves for Approval of Admin/Manager
+app.get('/api/leaves/pending', async (req, res) => {
+  try {
+    const query = `
+    SELECT l.id, l.employee_number, l.leave_type, l.date, l.status, l.created_at,
+           lt.description AS leave_description,
+           u.username
+    FROM leaves l
+    JOIN leave_table lt ON l.leave_type = lt.leave_code
+    JOIN users u ON l.employee_number = u.employeeNumber
+    WHERE l.status = 'pending'
+    ORDER BY l.created_at DESC
+  `;
+    db.query(query, (err, result) => {
+      res.json(result);
+    });
+  } catch (e) {
+    console.error('Database Query Failed', e);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Update Leave status either (approved or rejected)
+app.put('/api/leaves/status/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!['0', '1'].includes(status)) {
+    return res.status(400).json({ message: 'Invalid status value' });
+  }
+
+  const sql = `UPDATE leaves SET status = ? WHERE id = ?`;
+
+  db.query(sql, [status, id], (err, result) => {
+    try {
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Leave request not found' });
+      }
+      res.json({ message: 'Leave status updated successfully' });
+    } catch (e) {
+      console.error('Error updating leave status:', e);
+      res.status(500).json({ message: 'Database error' });
+    }
+  });
+});
+//==========================
+// LEAVE MANAGEMENT END HERE
+//==========================
+
+// CALENDAR FOR HOLIDAY OR SUSPENSION START HERE.
+// POST a calendar events
+app.post('/api/calendar-events', (req, res) => {
+  const { type, start_date, end_date, description } = req.body;
+
+  if (!['holiday', 'suspension'].includes(type)) {
+    return res.status(400).json({ message: 'Invalid event type' });
+  }
+
+  if (!start_date || !description) {
+    return res.status(400).json({ message: 'Missing required field' });
+  }
+
+  const sql = `INSERT INTO calendar_events (type, start_date, end_date, description) VALUES (?, ?, ?, ?)`;
+
+  db.query(
+    sql,
+    [type, start_date, end_date || start_date, description],
+    (err, result) => {
+      if (err) {
+        console.error('Insert Failed:', err);
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+      res.status(201).json({ message: 'Event posted successfully' });
+    }
+  );
+});
+
+// GET the calendar events
+app.get('/api/calendar-events', (req, res) => {
+  const sql = `
+  SELECT id, type, start_date, end_date, description 
+  FROM calendar_events 
+  ORDER BY start_date ASC
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Fetch failed');
+      return res.status(500).json({ message: 'Internal Server Error.' });
+    }
+    res.json(result);
+  });
+});
+
+app.put('/api/calendar-events/:id', (req, res) => {
+  const { id } = req.params;
+  const { description, type, start_date, end_date } = req.body;
+
+  const sql = `
+  UPDATE calendar_events
+  SET description = ?, type = ?, start_date = ?, end_date = ?
+  WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [description, type, start_date, end_date, id],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Database update failed' });
+      }
+      res.json({ message: 'Event updated successfully' });
+    }
+  );
+});
+
+// CALENDAR FOR HOLIDAY OR SUSPENSION END HERE.
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

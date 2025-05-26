@@ -1,8 +1,7 @@
-const express = require("express");
-const multer = require("multer");
-const mysql = require("mysql2");
+const express = require('express');
+const multer = require('multer');
+const mysql = require('mysql2');
 const router = express.Router();
-
 
 //MYSQL CONNECTION
 const db = mysql.createPool({
@@ -15,8 +14,7 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
-
-router.get("/all_data", (req, res) => {
+router.get('/all_data', (req, res) => {
   const query = `
     SELECT 
     person_table.*,
@@ -31,12 +29,15 @@ router.get("/all_data", (req, res) => {
 
   db.query(query, (err, results) => {
     console.log(err);
-    if (err) return res.status(500).json({ error: "Error fetching data", details: err });
+    if (err)
+      return res
+        .status(500)
+        .json({ error: 'Error fetching data', details: err });
     res.status(200).json(results);
   });
 });
 
-router.get("/all_data2", (req, res) => {
+router.get('/all_data2', (req, res) => {
   const query = `
     SELECT 
     person_table.*,
@@ -49,7 +50,10 @@ router.get("/all_data2", (req, res) => {
 
   db.query(query, (err, results) => {
     console.log(err);
-    if (err) return res.status(500).json({ error: "Error fetching data", details: err });
+    if (err)
+      return res
+        .status(500)
+        .json({ error: 'Error fetching data', details: err });
     res.status(200).json(results);
   });
 });

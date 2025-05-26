@@ -1,6 +1,6 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const mysql = require("mysql2");
+const mysql = require('mysql2');
 
 const db = mysql.createPool({
   host: 'localhost',
@@ -12,9 +12,8 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
-
 // Endpoint to fetch attendance records
-router.get("/api/attendance", (req, res) => {
+router.get('/api/attendance', (req, res) => {
   const { personId, startDate, endDate } = req.query;
   const sql = `
     SELECT attendanceRecord.*, users.employeeNumber, users.username,
@@ -27,8 +26,8 @@ router.get("/api/attendance", (req, res) => {
   `;
   db.query(sql, [personId, startDate, endDate], (err, results) => {
     if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Error fetching data" });
+      console.error('Error fetching data:', err);
+      res.status(500).json({ error: 'Error fetching data' });
       return;
     }
     res.json(results);
@@ -36,7 +35,7 @@ router.get("/api/attendance", (req, res) => {
 });
 
 // Endpoint to check if attendance record exists
-router.get("/api/check-attendance", (req, res) => {
+router.get('/api/check-attendance', (req, res) => {
   const { personID, date } = req.query;
   const sql = `SELECT EXISTS(SELECT * FROM attendanceRecord WHERE personID = ? AND date = ?) AS exists`;
   db.query(sql, [personID, date], (err, results) => {
@@ -45,32 +44,39 @@ router.get("/api/check-attendance", (req, res) => {
   });
 });
 
-
-
 // Endpoint to update attendance records
-router.post("/api/update-attendance", (req, res) => {
+router.post('/api/update-attendance', (req, res) => {
   const { records } = req.body;
 
   const promises = records.map((record) => {
     const sql = `UPDATE attendanceRecord SET timeIN = ?, breaktimeIN = ?, breaktimeOUT = ?, timeOUT = ? WHERE id = ?`;
     return new Promise((resolve, reject) => {
-      db.query(sql, [record.timeIN, record.breaktimeIN, record.breaktimeOUT, record.timeOUT, record.id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
+      db.query(
+        sql,
+        [
+          record.timeIN,
+          record.breaktimeIN,
+          record.breaktimeOUT,
+          record.timeOUT,
+          record.id,
+        ],
+        (err) => {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
     });
   });
 
   Promise.all(promises)
-    .then(() => res.json({ message: "Records updated successfully" }))
+    .then(() => res.json({ message: 'Records updated successfully' }))
     .catch((err) => res.status(500).json({ error: err.message }));
 });
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Additional endpoint for attendance with date filtering
-router.post("/api/attendance", (req, res) => {
+router.post('/api/attendance', (req, res) => {
   const { personID, startDate, endDate } = req.body;
 
   const query = `
@@ -90,20 +96,20 @@ router.post("/api/attendance", (req, res) => {
     const records = results.map((record) => {
       const date = new Date(record.AttendanceDateTime);
       const options = {
-        timeZone: "Asia/Manila",
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
       };
-      const manilaDate = date.toLocaleString("en-PH", options);
+      const manilaDate = date.toLocaleString('en-PH', options);
 
       return {
         PersonID: record.PersonID,
-        Date: manilaDate.split(",")[0], // Date part
-        Time: manilaDate.split(",")[1].trim(), // Time part
+        Date: manilaDate.split(',')[0], // Date part
+        Time: manilaDate.split(',')[1].trim(), // Time part
         AttendanceState: record.AttendanceState,
       };
     });
@@ -113,7 +119,7 @@ router.post("/api/attendance", (req, res) => {
 });
 
 // Endpoint to fetch all attendance records with specific time columns
-router.post("/api/all-attendance", (req, res) => {
+router.post('/api/all-attendance', (req, res) => {
   const { personID, startDate, endDate } = req.body;
 
   const query = `
@@ -142,16 +148,16 @@ router.post("/api/all-attendance", (req, res) => {
         if (!timestamp) return null;
         const date = new Date(timestamp);
         return date
-          .toLocaleString("en-PH", {
-            timeZone: "Asia/Manila",
-            year: "numeric",
-            month: "numeric",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            second: "numeric",
+          .toLocaleString('en-PH', {
+            timeZone: 'Asia/Manila',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
           })
-          .split(", ")[1];
+          .split(', ')[1];
       };
 
       return {
@@ -169,9 +175,8 @@ router.post("/api/all-attendance", (req, res) => {
   });
 });
 
-
 // Endpoint to save attendance records
-router.post("/api/save-attendance", (req, res) => {
+router.post('/api/save-attendance', (req, res) => {
   const { records } = req.body;
 
   const promises = records.map((record) => {
@@ -183,20 +188,32 @@ router.post("/api/save-attendance", (req, res) => {
         const exists = checkResult[0].recordExists;
         if (exists) {
           resolve({
-            status: "exists",
+            status: 'exists',
             personID: record.personID,
             date: record.date,
           });
         } else {
           const insertSql = `INSERT INTO attendanceRecord (personID, date, day, timeIN, breaktimeIN, breaktimeOUT, timeOUT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-          db.query(insertSql, [record.personID, record.date, record.Day, record.timeIN, record.breaktimeIN, record.breaktimeOUT, record.timeOUT], (err) => {
-            if (err) return reject(err);
-            resolve({
-              status: "saved",
-              personID: record.personID,
-              date: record.date,
-            });
-          });
+          db.query(
+            insertSql,
+            [
+              record.personID,
+              record.date,
+              record.Day,
+              record.timeIN,
+              record.breaktimeIN,
+              record.breaktimeOUT,
+              record.timeOUT,
+            ],
+            (err) => {
+              if (err) return reject(err);
+              resolve({
+                status: 'saved',
+                personID: record.personID,
+                date: record.date,
+              });
+            }
+          );
         }
       });
     });
@@ -229,7 +246,7 @@ router.post("/api/save-attendance", (req, res) => {
 // });
 
 // Fetch records
-router.post("/api/view-attendance", (req, res) => {
+router.post('/api/view-attendance', (req, res) => {
   const { personID, startDate, endDate } = req.body;
 
   const query = `
@@ -257,9 +274,8 @@ router.post("/api/view-attendance", (req, res) => {
   });
 });
 
-
 // Update records
-router.put("/api/view-attendance", (req, res) => {
+router.put('/api/view-attendance', (req, res) => {
   const { records } = req.body;
 
   const updatePromises = records.map((record) => {
@@ -269,7 +285,14 @@ router.put("/api/view-attendance", (req, res) => {
       WHERE personID = ? AND date = ?
     `;
 
-    const params = [record.timeIN, record.breaktimeIN, record.breaktimeOUT, record.timeOUT, record.personID, record.date];
+    const params = [
+      record.timeIN,
+      record.breaktimeIN,
+      record.breaktimeOUT,
+      record.timeOUT,
+      record.personID,
+      record.date,
+    ];
 
     return new Promise((resolve, reject) => {
       db.query(query, params, (err, result) => {
@@ -280,19 +303,18 @@ router.put("/api/view-attendance", (req, res) => {
   });
 
   Promise.all(updatePromises)
-    .then(() => res.send({ message: "Records updated successfully." }))
+    .then(() => res.send({ message: 'Records updated successfully.' }))
     .catch((err) => res.status(500).send(err));
 });
 
-
-
-
 // GET API for fetching attendance records
-router.get("/api/dtr", (req, res) => {
+router.get('/api/dtr', (req, res) => {
   const { personID, startDate, endDate } = req.query;
 
   if (!personID || !startDate || !endDate) {
-    return res.status(400).json({ error: "Missing required query parameters." });
+    return res
+      .status(400)
+      .json({ error: 'Missing required query parameters.' });
   }
 
   const query = `
@@ -306,17 +328,17 @@ router.get("/api/dtr", (req, res) => {
 
   db.query(query, [personID, startDate, endDate], (err, results) => {
     if (err) {
-      console.error("Error executing query:", err);
-      return res.status(500).json({ error: "Database query failed." });
+      console.error('Error executing query:', err);
+      return res.status(500).json({ error: 'Database query failed.' });
     }
 
     res.json(results);
   });
 });
 
-router.post("/api/overall_attendance", (req, res) => {
+router.post('/api/overall_attendance', (req, res) => {
   const {
-    personID ,
+    personID,
     startDate,
     endDate,
     totalRenderedTimeMorning,
@@ -389,17 +411,22 @@ router.post("/api/overall_attendance", (req, res) => {
     ],
     (error, results) => {
       if (error) {
-        console.error("Error inserting data:", error);
-        return res.status(500).json({ message: "Database error", error });
+        console.error('Error inserting data:', error);
+        return res.status(500).json({ message: 'Database error', error });
       }
-      res.status(201).json({ message: "Attendance record saved successfully", data: results });
+      res
+        .status(201)
+        .json({
+          message: 'Attendance record saved successfully',
+          data: results,
+        });
     }
   );
 });
 
-router.get("/api/overall_attendance_record", (req, res) => {
+router.get('/api/overall_attendance_record', (req, res) => {
   const { personID, startDate, endDate } = req.query;
-  console.log("Received parameters:", { personID, startDate, endDate });
+  console.log('Received parameters:', { personID, startDate, endDate });
 
   const query = `
    SELECT 
@@ -419,31 +446,35 @@ WHERE
 
   db.query(query, [personID, startDate, endDate], (error, results) => {
     if (error) {
-      console.error("Error Fetching data:", error);
-      return res.status(500).json({ message: "Database error", error });
+      console.error('Error Fetching data:', error);
+      return res.status(500).json({ message: 'Database error', error });
     }
-    res.status(200).json({ message: "Overall attendance record fetched successfully", data: results });
+    res
+      .status(200)
+      .json({
+        message: 'Overall attendance record fetched successfully',
+        data: results,
+      });
   });
 });
 
-
-router.put("/api/overall_attendance_record/:id", (req, res) => {
+router.put('/api/overall_attendance_record/:id', (req, res) => {
   const {
-    personID, 
-    startDate, 
-    endDate, 
-    totalRenderedTimeMorning, 
-    totalRenderedTimeMorningTardiness, 
-    totalRenderedTimeAfternoon, 
-    totalRenderedTimeAfternoonTardiness, 
-    totalRenderedHonorarium, 
-    totalRenderedHonorariumTardiness, 
-    totalRenderedServiceCredit, 
-    totalRenderedServiceCreditTardiness, 
-    totalRenderedOvertime, 
-    totalRenderedOvertimeTardiness, 
-    overallRenderedOfficialTime, 
-    overallRenderedOfficialTimeTardiness
+    personID,
+    startDate,
+    endDate,
+    totalRenderedTimeMorning,
+    totalRenderedTimeMorningTardiness,
+    totalRenderedTimeAfternoon,
+    totalRenderedTimeAfternoonTardiness,
+    totalRenderedHonorarium,
+    totalRenderedHonorariumTardiness,
+    totalRenderedServiceCredit,
+    totalRenderedServiceCreditTardiness,
+    totalRenderedOvertime,
+    totalRenderedOvertimeTardiness,
+    overallRenderedOfficialTime,
+    overallRenderedOfficialTimeTardiness,
   } = req.body;
 
   const { id } = req.params;
@@ -452,20 +483,38 @@ router.put("/api/overall_attendance_record/:id", (req, res) => {
   const checkQuery = `
     SELECT * FROM overall_attendance_record WHERE personID = ? AND startDate = ? AND endDate = ? AND id != ?;
   `;
-  console.log("Checking for duplicates with", { personID, startDate, endDate, id });
+  console.log('Checking for duplicates with', {
+    personID,
+    startDate,
+    endDate,
+    id,
+  });
 
-  db.query(checkQuery, [personID, startDate, endDate, id], (checkError, checkResults) => {
-    if (checkError) {
-      return res.status(500).json({ message: "Database error while checking for duplicates", error: checkError });
-    }
+  db.query(
+    checkQuery,
+    [personID, startDate, endDate, id],
+    (checkError, checkResults) => {
+      if (checkError) {
+        return res
+          .status(500)
+          .json({
+            message: 'Database error while checking for duplicates',
+            error: checkError,
+          });
+      }
 
-    if (checkResults.length > 0) {
-      // If there's a record with the same personID, startDate, and endDate, return a duplicate error
-      return res.status(400).json({ message: "Duplicate record found with the same personID, startDate, and endDate" });
-    }
+      if (checkResults.length > 0) {
+        // If there's a record with the same personID, startDate, and endDate, return a duplicate error
+        return res
+          .status(400)
+          .json({
+            message:
+              'Duplicate record found with the same personID, startDate, and endDate',
+          });
+      }
 
-    // Proceed with the update since no duplicates were found
-    const query = `
+      // Proceed with the update since no duplicates were found
+      const query = `
       UPDATE overall_attendance_record SET
       personID = ?, 
       startDate = ?, 
@@ -485,50 +534,49 @@ router.put("/api/overall_attendance_record/:id", (req, res) => {
       WHERE id = ?;
     `;
 
-    db.query(query, [
-      personID, 
-      startDate, 
-      endDate, 
-      totalRenderedTimeMorning, 
-      totalRenderedTimeMorningTardiness, 
-      totalRenderedTimeAfternoon, 
-      totalRenderedTimeAfternoonTardiness, 
-      totalRenderedHonorarium, 
-      totalRenderedHonorariumTardiness, 
-      totalRenderedServiceCredit, 
-      totalRenderedServiceCreditTardiness, 
-      totalRenderedOvertime, 
-      totalRenderedOvertimeTardiness, 
-      overallRenderedOfficialTime, 
-      overallRenderedOfficialTimeTardiness, 
-      id
-    ], (error, results) => {
-      if (error) {
-        console.error(error); // Log error for debugging
-        return res.status(500).json({ message: "Database error", error });
-      }
-      res.status(200).json({ message: "Record updated successfully", data: results });
-    });
-  });
+      db.query(
+        query,
+        [
+          personID,
+          startDate,
+          endDate,
+          totalRenderedTimeMorning,
+          totalRenderedTimeMorningTardiness,
+          totalRenderedTimeAfternoon,
+          totalRenderedTimeAfternoonTardiness,
+          totalRenderedHonorarium,
+          totalRenderedHonorariumTardiness,
+          totalRenderedServiceCredit,
+          totalRenderedServiceCreditTardiness,
+          totalRenderedOvertime,
+          totalRenderedOvertimeTardiness,
+          overallRenderedOfficialTime,
+          overallRenderedOfficialTimeTardiness,
+          id,
+        ],
+        (error, results) => {
+          if (error) {
+            console.error(error); // Log error for debugging
+            return res.status(500).json({ message: 'Database error', error });
+          }
+          res
+            .status(200)
+            .json({ message: 'Record updated successfully', data: results });
+        }
+      );
+    }
+  );
 });
 
-
-
-router.delete("/api/overall_attendance_record/:id", (req, res) => {
+router.delete('/api/overall_attendance_record/:id', (req, res) => {
   const { id } = req.params;
 
-  const query = "DELETE FROM overall_attendance_record WHERE id = ?";
+  const query = 'DELETE FROM overall_attendance_record WHERE id = ?';
 
   db.query(query, [id], (err, result) => {
-    if (err) return res.status(500).send({ message: "Internal Server Error" });
-    res.status(200).send({ message: "Attendance entry deleted" });
+    if (err) return res.status(500).send({ message: 'Internal Server Error' });
+    res.status(200).send({ message: 'Attendance entry deleted' });
   });
 });
-
-
-
-
-
-
 
 module.exports = router;

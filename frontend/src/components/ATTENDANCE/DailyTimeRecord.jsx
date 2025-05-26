@@ -1,41 +1,42 @@
-import React, { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { TextField, Button, Box } from "@mui/material";
+import { TextField, Button } from '@mui/material';
 import earistLogo from '../../assets/earistLogo.jpg';
-import { AccessTime, Print, SaveOutlined, Search, SearchOutlined } from '@mui/icons-material';
-import PrintIcon from '@mui/icons-material/Print'
-
+import { AccessTime, SearchOutlined } from '@mui/icons-material';
+import PrintIcon from '@mui/icons-material/Print';
 
 const DailyTimeRecord = () => {
   const [personID, setPersonID] = useState('');
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [records, setRecords] = useState([]);
-  const [employeeName, setEmployeeName] = useState("");
+  const [employeeName, setEmployeeName] = useState('');
   const [officialTimes, setOfficialTimes] = useState({});
-
 
   useEffect(() => {
     // Retrieve and decode the token from local storage
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       try {
         const decoded = jwtDecode(token);
         setPersonID(decoded.employeeNumber); // Set the employeeNumber in state
       } catch (error) {
-        console.error("Error decoding token:", error);
+        console.error('Error decoding token:', error);
       }
     }
   }, []);
 
   const fetchRecords = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/attendance/api/view-attendance", {
-        personID,
-        startDate,
-        endDate,
-      });
+      const response = await axios.post(
+        'http://localhost:5000/attendance/api/view-attendance',
+        {
+          personID,
+          startDate,
+          endDate,
+        }
+      );
 
       const data = response.data;
 
@@ -44,7 +45,7 @@ const DailyTimeRecord = () => {
         setRecords(data);
 
         // Extract and set the employee name from the first record
-        const { firstName, lastName} = data[0];
+        const { firstName, lastName } = data[0];
         setEmployeeName(`${firstName} ${lastName}`);
         // Extract and map officialTimeIN and officialTimeOUT by day
         const officialTimes = data.reduce((acc, record) => {
@@ -58,7 +59,7 @@ const DailyTimeRecord = () => {
         setOfficialTimes(officialTimes); // Save the mapping
       } else {
         setRecords([]);
-        setEmployeeName("No records found");
+        setEmployeeName('No records found');
         setOfficialTimes({});
       }
     } catch (err) {
@@ -67,45 +68,43 @@ const DailyTimeRecord = () => {
   };
 
   const printPage = () => {
-    const elementsToHide = document.querySelectorAll(".no-print");
-    const sidebar = document.querySelector(".MuiDrawer-root");
-    const header = document.querySelector(".header");
+    const elementsToHide = document.querySelectorAll('.no-print');
+    const sidebar = document.querySelector('.MuiDrawer-root');
+    const header = document.querySelector('.header');
 
-    if (sidebar) sidebar.style.display = "none";
-    if (header) header.style.display = "none";
+    if (sidebar) sidebar.style.display = 'none';
+    if (header) header.style.display = 'none';
 
-    elementsToHide.forEach((el) => (el.style.display = "none"));
+    elementsToHide.forEach((el) => (el.style.display = 'none'));
     window.print();
-    elementsToHide.forEach((el) => (el.style.display = ""));
-    if (sidebar) sidebar.style.display = "";
-    if (header) header.style.display = "";
+    elementsToHide.forEach((el) => (el.style.display = ''));
+    if (sidebar) sidebar.style.display = '';
+    if (header) header.style.display = '';
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const options = { year: "numeric", month: "long", day: "numeric" };
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString(undefined, options);
   };
 
   const formatMonth = (dateString) => {
     const date = new Date(dateString);
-    const options = { month: "long" }; // Only include the month name
+    const options = { month: 'long' }; // Only include the month name
     return date.toLocaleDateString(undefined, options).toUpperCase();
   };
 
-  
- // Function to format the start date (Month DayNumber)
+  // Function to format the start date (Month DayNumber)
   const formatStartDate = (dateString) => {
-    if (!dateString) return "";
+    if (!dateString) return '';
     const date = new Date(dateString);
-    const options = { month: "long", day: "numeric" }; // e.g., October 1
-    return date.toLocaleDateString("en-US", options);
+    const options = { month: 'long', day: 'numeric' }; // e.g., October 1
+    return date.toLocaleDateString('en-US', options);
   };
 
-
-// Function to format the end date (DayNumber, Year)
+  // Function to format the end date (DayNumber, Year)
   const formatEndDate = (dateString) => {
-    if (!dateString) return "";
+    if (!dateString) return '';
     const date = new Date(dateString);
     const day = date.getDate(); // Get the day number
     const year = date.getFullYear(); // Get the year
@@ -115,25 +114,23 @@ const DailyTimeRecord = () => {
   const formattedStartDate = formatStartDate(startDate);
   const formattedEndDate = formatEndDate(endDate);
 
-
-
   const handleMonthClick = (monthIndex) => {
     const year = new Date().getFullYear();
 
-  
     // format as YYYY-MM-DD (ISO format expected by <TextField type="date" />)
     const formattedStart = start.toISOString().substring(0, 10);
     const formattedEnd = end.toISOString().substring(0, 10);
-  
+
     setStartDate(formattedStart);
     setEndDate(formattedEnd);
   };
 
   return (
-    
-    <div className="container faculty" style={{transform: 'scale(0.8)', marginTop: '-10rem'}}>
-     
-    <style>
+    <div
+      className="container faculty"
+      style={{ transform: 'scale(0.8)', marginTop: '-10rem' }}
+    >
+      <style>
         {`
           @media print {
             .no-print { 
@@ -195,97 +192,138 @@ const DailyTimeRecord = () => {
         `}
       </style>
 
-
-      
       <div
-      className="search-container no-print textfield-container"
-  style={{
-    backgroundColor: '#6D2323',
-    color: '#ffffff',
-    padding: '20px',
-    width: '97%',
-    borderRadius: '8px',
-    borderBottomLeftRadius: '0px',
-    borderBottomRightRadius: '0px',
-   
-  }}
->
-  
-  <div  style={{ display: 'flex', alignItems: 'center', color: '#ffffff', }}>
-    <AccessTime sx={{ fontSize: '3rem', marginRight: '16px', marginTop: '5px', marginLeft: '5px' }} />
-    <div>
-      <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
-        Daily Time Record
-      </h4>
-      <p style={{ margin: 0, fontSize: '85%' }}>
-        Filter your DTR records by date
-      </p>
-    </div>
-  </div>
-      </div>   
-       
-      <div
-      className="search-container no-print textfield-container"
-  style={{
-    backgroundColor: 'white',
-    padding: '20px',
-    paddingTop: '30px',
-    width: '97%',
-    
-    paddingBottom: '30px',
-    borderRadius: '0px 0px 8px 8px',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
-  }}
->
- 
-
-
- <div className="search-container no-print textfield-container" >
-       
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white', paddingLeft: '18px' }} m disabled value={personID} variant="outlined" />
-
-
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} fullWidth label="Start Date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
-
-
-        <TextField sx={{ width: "275px", paddingLeft: '10px', paddingRight: "10px", backgroundColor:'white' }} label="End Date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} variant="outlined" InputLabelProps={{ shrink: true }} />
-
-
-        <Button
-          sx={{
-            width: "230px",
-            height: "55px",
-            marginleft: "40px",
-            margintop: "10px",
-            bgcolor: "#6D2323",
-            fontWeight: 'bold',
-            fontSize: '17px'
-          }}
-          variant="contained"
-          color="primary"
-          onClick={fetchRecords}
-          fullWidth
+        className="search-container no-print textfield-container"
+        style={{
+          backgroundColor: '#6D2323',
+          color: '#ffffff',
+          padding: '20px',
+          width: '97%',
+          borderRadius: '8px',
+          borderBottomLeftRadius: '0px',
+          borderBottomRightRadius: '0px',
+        }}
+      >
+        <div
+          style={{ display: 'flex', alignItems: 'center', color: '#ffffff' }}
         >
-          <SearchOutlined /> &nbsp;
-          Search
-        </Button>
-      </div>
+          <AccessTime
+            sx={{
+              fontSize: '3rem',
+              marginRight: '16px',
+              marginTop: '5px',
+              marginLeft: '5px',
+            }}
+          />
+          <div>
+            <h4 style={{ margin: 0, fontSize: '150%', marginBottom: '2px' }}>
+              Daily Time Record
+            </h4>
+            <p style={{ margin: 0, fontSize: '85%' }}>
+              Filter your DTR records by date
+            </p>
+          </div>
+        </div>
       </div>
 
+      <div
+        className="search-container no-print textfield-container"
+        style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          paddingTop: '30px',
+          width: '97%',
+
+          paddingBottom: '30px',
+          borderRadius: '0px 0px 8px 8px',
+          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <div className="search-container no-print textfield-container">
+          <TextField
+            sx={{
+              width: '275px',
+              paddingLeft: '10px',
+              paddingRight: '10px',
+              backgroundColor: 'white',
+              paddingLeft: '18px',
+            }}
+            m
+            disabled
+            value={personID}
+            variant="outlined"
+          />
+
+          <TextField
+            sx={{
+              width: '275px',
+              paddingLeft: '10px',
+              paddingRight: '10px',
+              backgroundColor: 'white',
+            }}
+            fullWidth
+            label="Start Date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
+            sx={{
+              width: '275px',
+              paddingLeft: '10px',
+              paddingRight: '10px',
+              backgroundColor: 'white',
+            }}
+            label="End Date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Button
+            sx={{
+              width: '230px',
+              height: '55px',
+              marginleft: '40px',
+              margintop: '10px',
+              bgcolor: '#6D2323',
+              fontWeight: 'bold',
+              fontSize: '17px',
+            }}
+            variant="contained"
+            color="primary"
+            onClick={fetchRecords}
+            fullWidth
+          >
+            <SearchOutlined /> &nbsp; Search
+          </Button>
+        </div>
+      </div>
 
       <br />
-      <div className="table-container" style={{marginBottom: '3%', backgroundColor:'white'}}>
+      <div
+        className="table-container"
+        style={{ marginBottom: '3%', backgroundColor: 'white' }}
+      >
         <div className="table-wrapper">
-          <div style={{ display: "flex", justifyContent: "space-between" }} className="table-side-by-side">
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between' }}
+            className="table-side-by-side"
+          >
             <table
               style={{
-                border: "1px solid black",
-                borderCollapse: "collapse",
-                width: "48%",
+                border: '1px solid black',
+                borderCollapse: 'collapse',
+                width: '48%',
               }}
               className="print-visble"
             >
-              <thead style={{ textAlign: "center", position: 'relative' }}>
+              <thead style={{ textAlign: 'center', position: 'relative' }}>
                 <tr>
                   <td></td>
                 </tr>
@@ -299,27 +337,38 @@ const DailyTimeRecord = () => {
                     colSpan="1"
                     style={{
                       position: 'relative',
-                      padding: "0",
-                      lineHeight: "0",
-                      height: "0px",
-                      textAlign: "right",
-                      marginRight: "0",
+                      padding: '0',
+                      lineHeight: '0',
+                      height: '0px',
+                      textAlign: 'right',
+                      marginRight: '0',
                     }}
                   >
-                    <img src={earistLogo} alt="EARIST Logo" width="55" height="55"  style={{position: 'absolute', marginTop: '-14%', left: '60%'}}/>
+                    <img
+                      src={earistLogo}
+                      alt="EARIST Logo"
+                      width="55"
+                      height="55"
+                      style={{
+                        position: 'absolute',
+                        marginTop: '-14%',
+                        left: '60%',
+                      }}
+                    />
                   </td>
                   <td colSpan="4">
-                    {" "}
+                    {' '}
                     <p
                       style={{
                         marginTop: '10%',
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        marginLeft: '10%'
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginLeft: '10%',
                       }}
                     >
-                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE & TECHNOLOGY
+                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE &
+                      TECHNOLOGY
                     </p>
                   </td>
                   <td></td>
@@ -332,9 +381,9 @@ const DailyTimeRecord = () => {
                   <td colSpan="9">
                     <p
                       style={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        lineHeight: "0",
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        lineHeight: '0',
                       }}
                     >
                       Nagtahan, Sampaloc Manila
@@ -345,30 +394,29 @@ const DailyTimeRecord = () => {
                   <td colSpan="9">
                     <p
                       style={{
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        lineHeight: "0",
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        lineHeight: '0',
                       }}
                     >
                       Civil Service Form No. 48
                     </p>
                   </td>
                 </tr>
-
                 <tr>
-                  <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
+                  <td colSpan="9" style={{ padding: '2', lineHeight: '0' }}>
                     <h4>DAILY TIME RECORD</h4>
                   </td>
                 </tr>
-                <tr style={{position: 'relative'}}>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "0" }}>
+                <tr style={{ position: 'relative' }}>
+                  <td colSpan="3" style={{ padding: '2', lineHeight: '0' }}>
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        height: "20px",
-                        textAlign: "left",
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        height: '20px',
+                        textAlign: 'left',
                         padding: '0 1rem',
                         marginTop: '6%',
                       }}
@@ -379,135 +427,154 @@ const DailyTimeRecord = () => {
                   <td></td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "right",
-                      position:'absolute', 
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'right',
+                      position: 'absolute',
                       right: '33.3%',
-                      top: '7%'
+                      top: '7%',
                     }}
                   >
                     Official Time:
                   </td>
                 </tr>
-
                 <tr>
-                  <td colSpan="5" style={{ padding: "2", lineHeight: "0" }}>
+                  <td colSpan="5" style={{ padding: '2', lineHeight: '0' }}>
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        height: "10px",
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        height: '10px',
                         paddingLeft: '1rem',
-                        textAlign: "Left",
+                        textAlign: 'Left',
                       }}
                     >
                       Covered Dates: {formattedStartDate} - {formattedEndDate}
                     </p>
                   </td>
                 </tr>
-                <tr style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '17%', top: '65%', gap: '6px'}}>
+                <tr
+                  style={{
+                    position: 'absolute',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    right: '17%',
+                    top: '65%',
+                    gap: '6px',
+                  }}
+                >
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "N/A"} - {officialTimes["Monday"]?.officialTimeOUT || "N/A"}
+                    M - {officialTimes['Monday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Monday']?.officialTimeOUT || 'N/A'}
                   </td>
 
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "N/A"} - {officialTimes["Tuesday"]?.officialTimeOUT || "N/A"}
+                    T - {officialTimes['Tuesday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Tuesday']?.officialTimeOUT || 'N/A'}
                   </td>
 
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "N/A"} - {officialTimes["Wednesday"]?.officialTimeOUT || "N/A"}
+                    W - {officialTimes['Wednesday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Wednesday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "N/A"} - {officialTimes["Thursday"]?.officialTimeOUT || "N/A"}
+                    TH - {officialTimes['Thursday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Thursday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "N/A"} - {officialTimes["Friday"]?.officialTimeOUT || "N/A"}
+                    F - {officialTimes['Friday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Friday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "N/A"} - {officialTimes["Saturday"]?.officialTimeOUT || "N/A"}
+                    SAT - {officialTimes['Saturday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Saturday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "N/A"} - {officialTimes["Sunday"]?.officialTimeOUT || "N/A"}
+                    SUN - {officialTimes['Sunday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Sunday']?.officialTimeOUT || 'N/A'}
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "2", textAlign: "left" }}>
+                  <td
+                    colSpan="3"
+                    style={{ padding: '2', lineHeight: '2', textAlign: 'left' }}
+                  >
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        paddingLeft: '1rem'
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        paddingLeft: '1rem',
                       }}
                     >
-                      For the month of: {startDate ? formatMonth(startDate) : ""}
+                      For the month of:{' '}
+                      {startDate ? formatMonth(startDate) : ''}
                     </p>
                   </td>
                   <td></td>
@@ -521,8 +588,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -530,18 +595,13 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -554,8 +614,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -568,8 +626,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -582,8 +638,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -596,8 +650,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -610,8 +662,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -624,36 +674,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -666,8 +686,18 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>{' '}
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                  
+                  <td></td>
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -680,22 +710,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -708,8 +722,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -722,8 +734,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -736,8 +746,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -750,77 +758,115 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
                 </tr>
-
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
-                
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
               </thead>
               <tr>
                 <th
                   rowSpan="2"
                   style={{
-                    textAlign: "center",
-                    verticalAlign: "middle",
-                    border: "1px solid black",
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    border: '1px solid black',
                   }}
                 >
                   DAY
                 </th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   A.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th style={{ border: '1px solid black' }}></th>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   P.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th style={{ border: '1px solid black' }}></th>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   Undertime
                 </th>
               </tr>
-              <tr style={{textAlign: 'center'}}>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>Hours</td>
-                <td style={{ border: "1px solid black" }}>Minutes</td>
+              <tr style={{ textAlign: 'center' }}>
+                <td style={{ border: '1px solid black' }}>ARRIVAL</td>
+                <td style={{ border: '1px solid black' }}>DEPARTURE</td>
+                <td style={{ border: '1px solid black' }}></td>
+                <td style={{ border: '1px solid black' }}>ARRIVAL</td>
+                <td style={{ border: '1px solid black' }}>DEPARTURE</td>
+                <td style={{ border: '1px solid black' }}></td>
+                <td style={{ border: '1px solid black' }}>Hours</td>
+                <td style={{ border: '1px solid black' }}>Minutes</td>
               </tr>
 
               <tbody>
                 {Array.from({ length: 31 }, (_, i) => {
-                  const day = (i + 1).toString().padStart(2, "0");
-                  const record = records.find((r) => r.date.endsWith(`-${day}`));
+                  const day = (i + 1).toString().padStart(2, '0');
+                  const record = records.find((r) =>
+                    r.date.endsWith(`-${day}`)
+                  );
 
                   return (
                     <tr key={i}>
-                      <td style={{ border: "1px solid black", textAlign: 'center'}}>{day}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.timeIN || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.timeOUT || ""}</td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>{record?.breaktimeIN || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.breaktimeOUT || ""}</td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>{record?.hours || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.minutes || ""}</td>
+                      <td
+                        style={{
+                          border: '1px solid black',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {day}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.timeIN || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.timeOUT || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}></td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.breaktimeIN || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.breaktimeOUT || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}></td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.hours || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.minutes || ''}
+                      </td>
                     </tr>
                   );
                 })}
@@ -830,72 +876,77 @@ const DailyTimeRecord = () => {
                       <br />
                       <hr
                         style={{
-                          borderTop: "3px solid black",
-                          width: "98%",
-                          margin: "0 auto",
+                          borderTop: '3px solid black',
+                          width: '98%',
+                          margin: '0 auto',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "justify",
-                          width: "95%",
-                          margin: "0 auto",
-                          marginTop: "10px",
+                          textAlign: 'justify',
+                          width: '95%',
+                          margin: '0 auto',
+                          marginTop: '10px',
                         }}
                       >
-                        I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.
+                        I certify on my honor that the above is a true and
+                        correct report of the hours of work performed, record of
+                        which was made daily at the time of arrival and
+                        departure from office.
                       </p>
                       <br />
                       <hr
                         style={{
-                          textAlign: "right",
-                          borderTop: "3px solid black",
-                          width: "55%",
-                          marginBottom: "20px",
-                          marginRight: "20px",
+                          textAlign: 'right',
+                          borderTop: '3px solid black',
+                          width: '55%',
+                          marginBottom: '20px',
+                          marginRight: '20px',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-12px",
-                          marginRight: "200px",
+                          textAlign: 'right',
+                          marginTop: '-12px',
+                          marginRight: '200px',
                         }}
                       >
                         Signature
                       </p>
                       <hr
                         style={{
-                          borderTop: "3px double black",
-                          width: "94%",
-                          margin: "0 auto",
+                          borderTop: '3px double black',
+                          width: '94%',
+                          margin: '0 auto',
                         }}
                       />
-                      <p style={{ textAlign: "center", marginTop: "12px" }}>Verified as to prescribe office hours.</p>
+                      <p style={{ textAlign: 'center', marginTop: '12px' }}>
+                        Verified as to prescribe office hours.
+                      </p>
                       <br />
                       <hr
                         style={{
-                          textAlign: "right",
-                          borderTop: "3px solid black",
-                          width: "55%",
-                          marginBottom: "20px",
-                          marginRight: "20px",
+                          textAlign: 'right',
+                          borderTop: '3px solid black',
+                          width: '55%',
+                          marginBottom: '20px',
+                          marginRight: '20px',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-8px",
-                          marginRight: "200px",
+                          textAlign: 'right',
+                          marginTop: '-8px',
+                          marginRight: '200px',
                         }}
                       >
                         In-Charge
                       </p>
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-12px",
-                          marginRight: "125px",
+                          textAlign: 'right',
+                          marginTop: '-12px',
+                          marginRight: '125px',
                         }}
                       >
                         (Signature Over Printed Name)
@@ -910,13 +961,13 @@ const DailyTimeRecord = () => {
 
             <table
               style={{
-                border: "1px solid black",
-                borderCollapse: "collapse",
-                width: "48%",
+                border: '1px solid black',
+                borderCollapse: 'collapse',
+                width: '48%',
               }}
               className="print-visble"
             >
-              <thead style={{ textAlign: "center", position: 'relative' }}>
+              <thead style={{ textAlign: 'center', position: 'relative' }}>
                 <tr>
                   <td></td>
                 </tr>
@@ -930,27 +981,38 @@ const DailyTimeRecord = () => {
                     colSpan="1"
                     style={{
                       position: 'relative',
-                      padding: "0",
-                      lineHeight: "0",
-                      height: "0px",
-                      textAlign: "right",
-                      marginRight: "0",
+                      padding: '0',
+                      lineHeight: '0',
+                      height: '0px',
+                      textAlign: 'right',
+                      marginRight: '0',
                     }}
                   >
-                    <img src={earistLogo} alt="EARIST Logo" width="55" height="55"  style={{position: 'absolute', marginTop: '-14%', left: '60%'}}/>
+                    <img
+                      src={earistLogo}
+                      alt="EARIST Logo"
+                      width="55"
+                      height="55"
+                      style={{
+                        position: 'absolute',
+                        marginTop: '-14%',
+                        left: '60%',
+                      }}
+                    />
                   </td>
                   <td colSpan="4">
-                    {" "}
+                    {' '}
                     <p
                       style={{
                         marginTop: '10%',
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        marginLeft: '10%'
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginLeft: '10%',
                       }}
                     >
-                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE & TECHNOLOGY
+                      EULOGIO "AMANG" RODRIGUEZ <br /> INSTITUTE OF SCIENCE &
+                      TECHNOLOGY
                     </p>
                   </td>
                   <td></td>
@@ -963,9 +1025,9 @@ const DailyTimeRecord = () => {
                   <td colSpan="9">
                     <p
                       style={{
-                        fontSize: "14px",
-                        fontWeight: "bold",
-                        lineHeight: "0",
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        lineHeight: '0',
                       }}
                     >
                       Nagtahan, Sampaloc Manila
@@ -976,30 +1038,29 @@ const DailyTimeRecord = () => {
                   <td colSpan="9">
                     <p
                       style={{
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        lineHeight: "0",
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        lineHeight: '0',
                       }}
                     >
                       Civil Service Form No. 48
                     </p>
                   </td>
                 </tr>
-
                 <tr>
-                  <td colSpan="9" style={{ padding: "2", lineHeight: "0" }}>
+                  <td colSpan="9" style={{ padding: '2', lineHeight: '0' }}>
                     <h4>DAILY TIME RECORD</h4>
                   </td>
                 </tr>
-                <tr style={{position: 'relative'}}>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "0" }}>
+                <tr style={{ position: 'relative' }}>
+                  <td colSpan="3" style={{ padding: '2', lineHeight: '0' }}>
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        height: "20px",
-                        textAlign: "left",
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        height: '20px',
+                        textAlign: 'left',
                         padding: '0 1rem',
                         marginTop: '6%',
                       }}
@@ -1010,135 +1071,154 @@ const DailyTimeRecord = () => {
                   <td></td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "right",
-                      position:'absolute', 
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'right',
+                      position: 'absolute',
                       right: '33.3%',
-                      top: '7%'
+                      top: '7%',
                     }}
                   >
                     Official Time:
                   </td>
                 </tr>
-
                 <tr>
-                  <td colSpan="5" style={{ padding: "2", lineHeight: "0" }}>
+                  <td colSpan="5" style={{ padding: '2', lineHeight: '0' }}>
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        height: "10px",
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        height: '10px',
                         paddingLeft: '1rem',
-                        textAlign: "Left",
+                        textAlign: 'Left',
                       }}
                     >
                       Covered Dates: {formattedStartDate} - {formattedEndDate}
                     </p>
                   </td>
                 </tr>
-                <tr style={{position: 'absolute', display: 'flex', flexDirection: 'column', right: '17%', top: '65%', gap: '6px'}}>
+                <tr
+                  style={{
+                    position: 'absolute',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    right: '17%',
+                    top: '65%',
+                    gap: '6px',
+                  }}
+                >
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    M - {officialTimes["Monday"]?.officialTimeIN || "N/A"} - {officialTimes["Monday"]?.officialTimeOUT || "N/A"}
+                    M - {officialTimes['Monday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Monday']?.officialTimeOUT || 'N/A'}
                   </td>
 
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    T - {officialTimes["Tuesday"]?.officialTimeIN || "N/A"} - {officialTimes["Tuesday"]?.officialTimeOUT || "N/A"}
+                    T - {officialTimes['Tuesday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Tuesday']?.officialTimeOUT || 'N/A'}
                   </td>
 
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    W - {officialTimes["Wednesday"]?.officialTimeIN || "N/A"} - {officialTimes["Wednesday"]?.officialTimeOUT || "N/A"}
+                    W - {officialTimes['Wednesday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Wednesday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    TH - {officialTimes["Thursday"]?.officialTimeIN || "N/A"} - {officialTimes["Thursday"]?.officialTimeOUT || "N/A"}
+                    TH - {officialTimes['Thursday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Thursday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    F - {officialTimes["Friday"]?.officialTimeIN || "N/A"} - {officialTimes["Friday"]?.officialTimeOUT || "N/A"}
+                    F - {officialTimes['Friday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Friday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    SAT - {officialTimes["Saturday"]?.officialTimeIN || "N/A"} - {officialTimes["Saturday"]?.officialTimeOUT || "N/A"}
+                    SAT - {officialTimes['Saturday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Saturday']?.officialTimeOUT || 'N/A'}
                   </td>
                   <td
                     style={{
-                      fontSize: "15px",
-                      fontWeight: "bold",
-                      margin: "0",
-                      height: "10px",
-                      textAlign: "Left",
-                      fontSize: '0.8rem'
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      height: '10px',
+                      textAlign: 'Left',
+                      fontSize: '0.8rem',
                     }}
                   >
-                    SUN - {officialTimes["Sunday"]?.officialTimeIN || "N/A"} - {officialTimes["Sunday"]?.officialTimeOUT || "N/A"}
+                    SUN - {officialTimes['Sunday']?.officialTimeIN || 'N/A'} -{' '}
+                    {officialTimes['Sunday']?.officialTimeOUT || 'N/A'}
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="3" style={{ padding: "2", lineHeight: "2", textAlign: "left" }}>
+                  <td
+                    colSpan="3"
+                    style={{ padding: '2', lineHeight: '2', textAlign: 'left' }}
+                  >
                     <p
                       style={{
-                        fontSize: "15px",
-                        fontWeight: "bold",
-                        margin: "0",
-                        paddingLeft: '1rem'
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        paddingLeft: '1rem',
                       }}
                     >
-                      For the month of: {startDate ? formatMonth(startDate) : ""}
+                      For the month of:{' '}
+                      {startDate ? formatMonth(startDate) : ''}
                     </p>
                   </td>
                   <td></td>
@@ -1152,8 +1232,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1161,18 +1239,13 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1185,8 +1258,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1199,8 +1270,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1213,8 +1282,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1227,8 +1294,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1241,8 +1306,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1255,36 +1318,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr> <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1297,8 +1330,18 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>{' '}
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
 
-                  
+                  <td></td>
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1311,22 +1354,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
-                </tr>
-                <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                 <tr>
-                  <td colSpan="3"></td>
-                  <td></td>
-                  <td></td>
-
-                  <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1339,8 +1366,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1353,8 +1378,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1367,8 +1390,6 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
@@ -1381,77 +1402,115 @@ const DailyTimeRecord = () => {
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
                 <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
                 </tr>
-
-                 <tr>
+                <tr>
                   <td colSpan="3"></td>
                   <td></td>
                   <td></td>
 
                   <td></td>
-
-                  
                 </tr>
-                
-                
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colSpan="3"></td>
+                  <td></td>
+                  <td></td>
+
+                  <td></td>
+                </tr>
               </thead>
               <tr>
                 <th
                   rowSpan="2"
                   style={{
-                    textAlign: "center",
-                    verticalAlign: "middle",
-                    border: "1px solid black",
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    border: '1px solid black',
                   }}
                 >
                   DAY
                 </th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   A.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th style={{ border: '1px solid black' }}></th>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   P.M.
                 </th>
-                <th style={{ border: "1px solid black" }}></th>
-                <th colSpan="2" style={{ border: "1px solid black" }}>
+                <th style={{ border: '1px solid black' }}></th>
+                <th colSpan="2" style={{ border: '1px solid black' }}>
                   Undertime
                 </th>
               </tr>
-              <tr style={{textAlign: 'center'}}>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>ARRIVAL</td>
-                <td style={{ border: "1px solid black" }}>DEPARTURE</td>
-                <td style={{ border: "1px solid black" }}></td>
-                <td style={{ border: "1px solid black" }}>Hours</td>
-                <td style={{ border: "1px solid black" }}>Minutes</td>
+              <tr style={{ textAlign: 'center' }}>
+                <td style={{ border: '1px solid black' }}>ARRIVAL</td>
+                <td style={{ border: '1px solid black' }}>DEPARTURE</td>
+                <td style={{ border: '1px solid black' }}></td>
+                <td style={{ border: '1px solid black' }}>ARRIVAL</td>
+                <td style={{ border: '1px solid black' }}>DEPARTURE</td>
+                <td style={{ border: '1px solid black' }}></td>
+                <td style={{ border: '1px solid black' }}>Hours</td>
+                <td style={{ border: '1px solid black' }}>Minutes</td>
               </tr>
 
               <tbody>
                 {Array.from({ length: 31 }, (_, i) => {
-                  const day = (i + 1).toString().padStart(2, "0");
-                  const record = records.find((r) => r.date.endsWith(`-${day}`));
+                  const day = (i + 1).toString().padStart(2, '0');
+                  const record = records.find((r) =>
+                    r.date.endsWith(`-${day}`)
+                  );
 
                   return (
                     <tr key={i}>
-                      <td style={{ border: "1px solid black", textAlign: 'center'}}>{day}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.timeIN || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.timeOUT || ""}</td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>{record?.breaktimeIN || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.breaktimeOUT || ""}</td>
-                      <td style={{ border: "1px solid black" }}></td>
-                      <td style={{ border: "1px solid black" }}>{record?.hours || ""}</td>
-                      <td style={{ border: "1px solid black" }}>{record?.minutes || ""}</td>
+                      <td
+                        style={{
+                          border: '1px solid black',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {day}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.timeIN || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.timeOUT || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}></td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.breaktimeIN || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.breaktimeOUT || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}></td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.hours || ''}
+                      </td>
+                      <td style={{ border: '1px solid black' }}>
+                        {record?.minutes || ''}
+                      </td>
                     </tr>
                   );
                 })}
@@ -1461,72 +1520,77 @@ const DailyTimeRecord = () => {
                       <br />
                       <hr
                         style={{
-                          borderTop: "3px solid black",
-                          width: "98%",
-                          margin: "0 auto",
+                          borderTop: '3px solid black',
+                          width: '98%',
+                          margin: '0 auto',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "justify",
-                          width: "95%",
-                          margin: "0 auto",
-                          marginTop: "10px",
+                          textAlign: 'justify',
+                          width: '95%',
+                          margin: '0 auto',
+                          marginTop: '10px',
                         }}
                       >
-                        I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival and departure from office.
+                        I certify on my honor that the above is a true and
+                        correct report of the hours of work performed, record of
+                        which was made daily at the time of arrival and
+                        departure from office.
                       </p>
                       <br />
                       <hr
                         style={{
-                          textAlign: "right",
-                          borderTop: "3px solid black",
-                          width: "55%",
-                          marginBottom: "20px",
-                          marginRight: "20px",
+                          textAlign: 'right',
+                          borderTop: '3px solid black',
+                          width: '55%',
+                          marginBottom: '20px',
+                          marginRight: '20px',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-12px",
-                          marginRight: "200px",
+                          textAlign: 'right',
+                          marginTop: '-12px',
+                          marginRight: '200px',
                         }}
                       >
                         Signature
                       </p>
                       <hr
                         style={{
-                          borderTop: "3px double black",
-                          width: "94%",
-                          margin: "0 auto",
+                          borderTop: '3px double black',
+                          width: '94%',
+                          margin: '0 auto',
                         }}
                       />
-                      <p style={{ textAlign: "center", marginTop: "12px" }}>Verified as to prescribe office hours.</p>
+                      <p style={{ textAlign: 'center', marginTop: '12px' }}>
+                        Verified as to prescribe office hours.
+                      </p>
                       <br />
                       <hr
                         style={{
-                          textAlign: "right",
-                          borderTop: "3px solid black",
-                          width: "55%",
-                          marginBottom: "20px",
-                          marginRight: "20px",
+                          textAlign: 'right',
+                          borderTop: '3px solid black',
+                          width: '55%',
+                          marginBottom: '20px',
+                          marginRight: '20px',
                         }}
                       />
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-8px",
-                          marginRight: "200px",
+                          textAlign: 'right',
+                          marginTop: '-8px',
+                          marginRight: '200px',
                         }}
                       >
                         In-Charge
                       </p>
                       <p
                         style={{
-                          textAlign: "right",
-                          marginTop: "-12px",
-                          marginRight: "125px",
+                          textAlign: 'right',
+                          marginTop: '-12px',
+                          marginRight: '125px',
                         }}
                       >
                         (Signature Over Printed Name)
@@ -1542,24 +1606,20 @@ const DailyTimeRecord = () => {
 
       <Button
         sx={{
-          width: "200px",
-          height: "55px",
+          width: '200px',
+          height: '55px',
           marginLeft: '84%',
-          margintop: "10px",
+          margintop: '10px',
           bgcolor: '#6D2323',
           fontSize: '15px',
-          
         }}
         className="no-print"
         variant="contained"
         color="primary"
         onClick={printPage}
         fullWidth
-        
       >
-          <PrintIcon style={{ fontSize: '24px' }} /> &nbsp;
-        
-        Print
+        <PrintIcon style={{ fontSize: '24px' }} /> &nbsp; Print
       </Button>
     </div>
   );
